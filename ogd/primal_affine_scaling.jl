@@ -19,14 +19,14 @@ function initial()::Vector{Float64}
 end
 
 function stop(b::Vector{Float64}, c::Vector{Float64}, x::Vector{Float64}, y::Vector{Float64}, ϵ::Float64)::Bool
-    cᵀx = tr(c)*x;
-    bᵀy = tr(b)*y;
+    cᵀx = transpose(c)*x;
+    bᵀy = transpose(b)*y;
     
     return abs(cᵀx - bᵀy) / (1 + abs(cᵀx)) <= ϵ;
 end
 
 function direction(A::Matrix{Float64}, c::Vector{Float64}, xᵏ::Vector{Float64})::Tuple{Vector{Float64}, Vector{Float64}}
-    Aᵀ = tr(A);
+    Aᵀ = transpose(A);
 
     D = Diagonal(xᵏ)^2;
     y =  solve(A*D*Aᵀ, A*D*c);
