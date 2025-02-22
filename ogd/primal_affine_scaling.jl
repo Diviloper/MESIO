@@ -1,4 +1,4 @@
-using LinearAlgebra
+using LinearAlgebra, LinearSolve
 
 function primal_affine_scaling(A::Matrix{Float64}, b::Vector{Float64}, c::Vector{Float64}, ϵ::Float64, ρ::Float64)::Vector{Float64}
 
@@ -29,7 +29,7 @@ function direction(A::Matrix{Float64}, c::Vector{Float64}, xᵏ::Vector{Float64}
     Aᵀ = tr(A);
 
     D = Diagonal(xᵏ)^2;
-    y =  inv(A*D*Aᵀ)*A*D*c;
+    y =  solve(A*D*Aᵀ, A*D*c);
     z = c - Aᵀ*y;
 
     Δᵏ = -D*z;
