@@ -15,7 +15,10 @@ struct Result
     x::VVF
     Δ::VVF
     gap::VF
+    iterations::Int
 end
+Result(o, x, Δ, gap) = Result(o, x, Δ, gap, x.size[1]);
+Result(x, Δ, gap) = Result(round.(x[end], digits=6), x, Δ, gap, x.size[1]);
 
 function primal_affine_scaling(P::Problem, ϵ::Float64=10e-8, ρ::Float64=0.995)::Result
 
@@ -27,7 +30,7 @@ function primal_affine_scaling(P::Problem, ϵ::Float64=10e-8, ρ::Float64=0.995)
         throw("Problem is unfeasible: xₙ₊₁ = $(x[end])")
     end
 
-    return Result(o[1:end-1], [xᵢ[1:end-1] for xᵢ in x], [Δᵢ[1:end-1] for Δᵢ in Δ], gap)
+    return Result([xᵢ[1:end-1] for xᵢ in x], [Δᵢ[1:end-1] for Δᵢ in Δ], gap)
 end
 
 function primal_affine_scaling(P::Problem, x⁰::VF, ϵ::Float64, ρ::Float64)::Result
@@ -64,7 +67,7 @@ function primal_affine_scaling(P::Problem, x⁰::VF, ϵ::Float64, ρ::Float64)::
         push!(gap, dual_gap(b, c, x[k], y))
     end
 
-    return Result(round.(x[k], digits=4), x, Δ, gap);
+    return Result(x, Δ, gap);
 end
 
 function expand_problem(P::Problem)::Tuple{Problem,VF}
