@@ -9,6 +9,7 @@ struct Problem
     b::VF
     c::VF
 end
+Problem(A, b::MF, c::MF) = Problem(A, b[:,1], c[:,1])
 
 struct Result
     o::VF
