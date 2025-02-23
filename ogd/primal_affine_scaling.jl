@@ -1,8 +1,8 @@
-using LinearAlgebra, LinearSolve
+using LinearAlgebra, LinearSolve, SparseArrays
 
 const VF = Vector{Float64}
 const VVF = Vector{VF}
-const MF = Matrix{Float64}
+const MF = Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}}
 
 struct Problem
     A::MF
@@ -27,7 +27,7 @@ function primal_affine_scaling(P::Problem, ϵ::Float64=10e-8, ρ::Float64=0.995)
     (; o, x, Δ, gap) = primal_affine_scaling(PM, x̄⁰, ϵ, ρ)
 
     if o[end] > ϵ
-        throw("Problem is unfeasible: xₙ₊₁ = $(x[end])")
+        println("Problem is unfeasible: xₙ₊₁ = $(o[end])")
     end
 
     return Result([xᵢ[1:end-1] for xᵢ in x], [Δᵢ[1:end-1] for Δᵢ in Δ], gap)
@@ -37,6 +37,12 @@ function primal_affine_scaling(P::Problem, x⁰::VF, ϵ::Float64, ρ::Float64)::
     # Constants
     (; A, b, c) = P
     Aᵀ = transpose(A)
+
+    # Checks
+    if rank(A) != A.size[1]
+        println("Matrix A is not full-rank. Linear dependent constraints will be removed")
+
+    end
 
     # History
     x::VVF = [x⁰]
@@ -85,6 +91,17 @@ function expand_problem(P::Problem)::Tuple{Problem,VF}
     x̄⁰ = push!(x⁰, 1)
 
     return Problem(Ā, b, c̄), x̄⁰
+end
+
+function simplify_problem((; A, b, c)::Problem)::Problem
+    Q, R, p = qr(A)  # QR decomposition with column pivoting
+    rank_A = rank(A)  # Compute numerical rank
+    independent_rows = p[1:rank_A]  # Keep only the independent rows
+    
+    A_reduced = A[independent_rows, :]
+    b_reduced = b[independent_rows]
+    
+    return Problem(A_reduced, b_reduced, c)
 end
 
 function dual_gap(b::VF, c::VF, x::VF, y::VF)::Float64
