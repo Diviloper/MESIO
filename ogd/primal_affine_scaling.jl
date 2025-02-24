@@ -1,25 +1,7 @@
 using LinearAlgebra, LinearSolve, SparseArrays
 
-const VF = Vector{Float64}
-const VVF = Vector{VF}
-const MF = Union{Matrix{Float64}, SparseMatrixCSC{Float64, Int64}}
-
-struct Problem
-    A::MF
-    b::VF
-    c::VF
-end
-Problem(A, b::MF, c::MF) = Problem(A, b[:,1], c[:,1])
-
-struct Result
-    o::VF
-    x::VVF
-    Δ::VVF
-    gap::VF
-    iterations::Int
-end
-Result(o, x, Δ, gap) = Result(o, x, Δ, gap, x.size[1])
-Result(x, Δ, gap) = Result(round.(x[end], digits=6), x, Δ, gap, x.size[1])
+include("types.jl")
+include("problem_utils.jl")
 
 function primal_affine_scaling(P::Problem, ϵ::Float64=10e-8, ρ::Float64=0.995)::Result
     PM, x̄⁰ = expand_problem(P)
@@ -39,9 +21,8 @@ function primal_affine_scaling(P::Problem, x⁰::VF, ϵ::Float64, ρ::Float64)::
     Aᵀ = transpose(A)
 
     # Checks
-    if rank(A) != A.size[1]
-        println("Matrix A is not full-rank. Linear dependent constraints will be removed")
-
+    if rank(A) != size(A, 1)
+        throw("Matrix A is not full-rank :(. Transform the input and try again please :)")
     end
 
     # History
@@ -56,6 +37,8 @@ function primal_affine_scaling(P::Problem, x⁰::VF, ϵ::Float64, ρ::Float64)::
     push!(gap, dual_gap(b, c, x[k], y))
 
     while gap[k] > ϵ
+        println("Iteration $k")
+        println("\tgap = $(gap[k])")
         z = c - Aᵀ * y
         push!(Δ, -D * z) # Δₖ = -Dz
 
@@ -74,34 +57,6 @@ function primal_affine_scaling(P::Problem, x⁰::VF, ϵ::Float64, ρ::Float64)::
     end
 
     return Result(x, Δ, gap)
-end
-
-function expand_problem(P::Problem)::Tuple{Problem,VF}
-    (; A, b, c) = P
-
-    n = size(c, 1)
-    x⁰ = [1.0 for _ = 1:n]
-
-    r = b - A * x⁰
-    Ā = hcat(A, r)
-
-    M = sum(abs.(c)) * 10000
-    c̄ = push!(copy(c), M)
-
-    x̄⁰ = push!(x⁰, 1)
-
-    return Problem(Ā, b, c̄), x̄⁰
-end
-
-function simplify_problem((; A, b, c)::Problem)::Problem
-    Q, R, p = qr(A)  # QR decomposition with column pivoting
-    rank_A = rank(A)  # Compute numerical rank
-    independent_rows = p[1:rank_A]  # Keep only the independent rows
-    
-    A_reduced = A[independent_rows, :]
-    b_reduced = b[independent_rows]
-    
-    return Problem(A_reduced, b_reduced, c)
 end
 
 function dual_gap(b::VF, c::VF, x::VF, y::VF)::Float64
