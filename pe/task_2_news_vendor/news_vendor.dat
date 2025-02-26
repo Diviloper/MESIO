@@ -1,0 +1,12 @@
+# Stochastic Parameters of the News Vendor Problem
+
+# Deterministic Params
+param limit := 200;
+param recovery := 5;
+param cost := 8;
+param price := 10;
+
+# Demand distribution U~[demand_lower, demand_upper]
+param discretizations := 10;
+param demand_lower := 100;
+param demand_upper := 200;

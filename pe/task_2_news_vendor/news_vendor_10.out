@@ -1,0 +1,97 @@
+
+parameters:
+cost                  discretization_step   prob
+demand                discretizations       recovery
+demand_lower          limit
+demand_upper          price
+
+set:   SCENARIOS
+
+variables:   w   x   y
+
+constraints:   SellLessThanDemand   SoldPlusReturnedLessThanBought
+
+objective:   CostTotal
+minimize CostTotal:
+	8*x - y[0] - y[1] - y[2] - y[3] - y[4] - y[5] - y[6] - y[7] - y[8] - 
+	y[9] - 0.5*w[0] - 0.5*w[1] - 0.5*w[2] - 0.5*w[3] - 0.5*w[4] - 0.5*w[5]
+	 - 0.5*w[6] - 0.5*w[7] - 0.5*w[8] - 0.5*w[9];
+
+subject to SellLessThanDemand[0]:
+	y[0] <= 100;
+
+subject to SellLessThanDemand[1]:
+	y[1] <= 110;
+
+subject to SellLessThanDemand[2]:
+	y[2] <= 120;
+
+subject to SellLessThanDemand[3]:
+	y[3] <= 130;
+
+subject to SellLessThanDemand[4]:
+	y[4] <= 140;
+
+subject to SellLessThanDemand[5]:
+	y[5] <= 150;
+
+subject to SellLessThanDemand[6]:
+	y[6] <= 160;
+
+subject to SellLessThanDemand[7]:
+	y[7] <= 170;
+
+subject to SellLessThanDemand[8]:
+	y[8] <= 180;
+
+subject to SellLessThanDemand[9]:
+	y[9] <= 190;
+
+subject to SoldPlusReturnedLessThanBought[0]:
+	-x + y[0] + w[0] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[1]:
+	-x + y[1] + w[1] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[2]:
+	-x + y[2] + w[2] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[3]:
+	-x + y[3] + w[3] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[4]:
+	-x + y[4] + w[4] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[5]:
+	-x + y[5] + w[5] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[6]:
+	-x + y[6] + w[6] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[7]:
+	-x + y[7] + w[7] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[8]:
+	-x + y[8] + w[8] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[9]:
+	-x + y[9] + w[9] <= 0;
+
+CPLEX 22.1.1: CPLEX 22.1.1: optimal solution; objective -230
+17 simplex iterations
+x = 130
+
+:    y    w     :=
+0   100   30
+1   110   20
+2   120   10
+3   130    0
+4   130    0
+5   130    0
+6   130    0
+7   130    0
+8   130    0
+9   130    0
+;
+
+ampl: include news_vendor.run;

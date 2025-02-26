@@ -1,0 +1,10 @@
+reset;
+model random_farmer.mod;
+data random_farmer.dat;
+option solver cplex;
+show;
+expand;
+solve;
+
+display x,y,w;
+display wbelow, wabove;

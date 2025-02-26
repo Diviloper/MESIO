@@ -1,0 +1,12 @@
+reset;
+
+model news_vendor.mod;
+data news_vendor.dat;
+
+option solver cplex;
+
+show;
+expand;
+solve;
+
+display x,y,w;

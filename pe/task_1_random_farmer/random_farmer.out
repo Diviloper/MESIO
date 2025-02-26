@@ -1,0 +1,90 @@
+ampl: include random_farmer.run
+
+parameters:
+cplant       min_crop     prob         pvabove      yield
+land_total   ppurchase    psell        pvbelow
+
+sets:   CROP   CROP1   CROP2   SCENARIOS
+
+variables:   w   wabove   wbelow   x   y
+
+constraints:   LandTotal   MinCrop   ProdControlled1   ProdControlled2
+
+objective:   cost_total
+minimize cost_total:
+	150*x['wheat'] + 230*x['corn'] + 260*x['sugar_beet'] - 
+	56.6667*w['bad','wheat'] - 50*w['bad','corn'] - 
+	56.6667*w['normal','wheat'] - 50*w['normal','corn'] - 
+	56.6667*w['good','wheat'] - 50*w['good','corn'] + 
+	79.3333*y['bad','wheat'] + 70*y['bad','corn'] + 
+	79.3333*y['normal','wheat'] + 70*y['normal','corn'] + 
+	79.3333*y['good','wheat'] + 70*y['good','corn'] - 
+	12*wbelow['bad','sugar_beet'] - 12*wbelow['normal','sugar_beet'] - 
+	12*wbelow['good','sugar_beet'] - 3.33333*wabove['bad','sugar_beet'] - 
+	3.33333*wabove['normal','sugar_beet'] - 
+	3.33333*wabove['good','sugar_beet'];
+
+subject to LandTotal:
+	x['wheat'] + x['corn'] + x['sugar_beet'] <= 500;
+
+subject to MinCrop['bad','wheat']:
+	2*x['wheat'] - w['bad','wheat'] + y['bad','wheat'] >= 200;
+
+subject to MinCrop['bad','corn']:
+	2.4*x['corn'] - w['bad','corn'] + y['bad','corn'] >= 240;
+
+subject to MinCrop['normal','wheat']:
+	2.5*x['wheat'] - w['normal','wheat'] + y['normal','wheat'] >= 200;
+
+subject to MinCrop['normal','corn']:
+	3*x['corn'] - w['normal','corn'] + y['normal','corn'] >= 240;
+
+subject to MinCrop['good','wheat']:
+	3*x['wheat'] - w['good','wheat'] + y['good','wheat'] >= 200;
+
+subject to MinCrop['good','corn']:
+	3.6*x['corn'] - w['good','corn'] + y['good','corn'] >= 240;
+
+subject to ProdControlled1['bad','sugar_beet']:
+	-16*x['sugar_beet'] + wbelow['bad','sugar_beet'] + 
+	wabove['bad','sugar_beet'] <= 0;
+
+subject to ProdControlled1['normal','sugar_beet']:
+	-20*x['sugar_beet'] + wbelow['normal','sugar_beet'] + 
+	wabove['normal','sugar_beet'] <= 0;
+
+subject to ProdControlled1['good','sugar_beet']:
+	-24*x['sugar_beet'] + wbelow['good','sugar_beet'] + 
+	wabove['good','sugar_beet'] <= 0;
+
+subject to ProdControlled2['bad','sugar_beet']:
+	wbelow['bad','sugar_beet'] <= 6000;
+
+subject to ProdControlled2['normal','sugar_beet']:
+	wbelow['normal','sugar_beet'] <= 6000;
+
+subject to ProdControlled2['good','sugar_beet']:
+	wbelow['good','sugar_beet'] <= 6000;
+
+CPLEX 22.1.1:               CPLEX 22.1.1: optimal solution; objective -108390
+15 simplex iterations
+x [*] :=
+      corn   80
+sugar_beet  250
+     wheat  170
+;
+
+:              y     w     :=
+bad    corn    48     0
+bad    wheat    0   140
+good   corn     0    48
+good   wheat    0   310
+normal corn     0     0
+normal wheat    0   225
+;
+
+:                 wbelow wabove    :=
+bad    sugar_beet   4000    0
+good   sugar_beet   6000    0
+normal sugar_beet   5000    0
+;

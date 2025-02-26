@@ -1,0 +1,17 @@
+
+parameters:
+cost                  discretization_step   prob
+demand                discretizations       recovery
+demand_lower          limit
+demand_upper          price
+
+set:   SCENARIOS
+
+variables:   w   x   y
+
+constraints:   SellLessThanDemand   SoldPlusReturnedLessThanBought
+
+objective:   CostTotal
+CPLEX 22.1.1: CPLEX 22.1.1: optimal solution; objective -239.9
+1601 simplex iterations
+ampl: include news_vendor.run;

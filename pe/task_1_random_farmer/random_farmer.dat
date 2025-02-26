@@ -1,0 +1,35 @@
+# Stochastic Parameters of Farmer's Problem
+
+set SCENARIOS := bad normal good ;
+set CROP1 := wheat corn ;
+set CROP2 := sugar_beet ;
+
+
+# Stochastic Params
+
+param yield: wheat corn sugar_beet :=
+  bad		2		2.4		16
+  normal	2.5		3		20
+  good		3		3.6		24
+;
+
+param prob:=
+  bad       0.3333333333333333333333 
+  normal	0.3333333333333333333334  
+  good		0.3333333333333333333333
+;
+
+param cplant:=
+  wheat        150 
+  corn   	   230  
+  sugar_beet   260
+;
+
+param:         min_crop 	psell 	ppurchase :=
+  wheat         200         170    	238
+  corn	        240         150    	210
+;
+
+param pvbelow := 36;
+param pvabove:= 10;
+param land_total := 500;

@@ -1,0 +1,657 @@
+
+parameters:
+cost                  discretization_step   prob
+demand                discretizations       recovery
+demand_lower          limit
+demand_upper          price
+
+set:   SCENARIOS
+
+variables:   w   x   y
+
+constraints:   SellLessThanDemand   SoldPlusReturnedLessThanBought
+
+objective:   CostTotal
+minimize CostTotal:
+	8*x - 0.1*y[0] - 0.1*y[1] - 0.1*y[2] - 0.1*y[3] - 0.1*y[4] - 0.1*y[5]
+	 - 0.1*y[6] - 0.1*y[7] - 0.1*y[8] - 0.1*y[9] - 0.1*y[10] - 0.1*y[11] - 
+	0.1*y[12] - 0.1*y[13] - 0.1*y[14] - 0.1*y[15] - 0.1*y[16] - 0.1*y[17]
+	 - 0.1*y[18] - 0.1*y[19] - 0.1*y[20] - 0.1*y[21] - 0.1*y[22] - 
+	0.1*y[23] - 0.1*y[24] - 0.1*y[25] - 0.1*y[26] - 0.1*y[27] - 0.1*y[28]
+	 - 0.1*y[29] - 0.1*y[30] - 0.1*y[31] - 0.1*y[32] - 0.1*y[33] - 
+	0.1*y[34] - 0.1*y[35] - 0.1*y[36] - 0.1*y[37] - 0.1*y[38] - 0.1*y[39]
+	 - 0.1*y[40] - 0.1*y[41] - 0.1*y[42] - 0.1*y[43] - 0.1*y[44] - 
+	0.1*y[45] - 0.1*y[46] - 0.1*y[47] - 0.1*y[48] - 0.1*y[49] - 0.1*y[50]
+	 - 0.1*y[51] - 0.1*y[52] - 0.1*y[53] - 0.1*y[54] - 0.1*y[55] - 
+	0.1*y[56] - 0.1*y[57] - 0.1*y[58] - 0.1*y[59] - 0.1*y[60] - 0.1*y[61]
+	 - 0.1*y[62] - 0.1*y[63] - 0.1*y[64] - 0.1*y[65] - 0.1*y[66] - 
+	0.1*y[67] - 0.1*y[68] - 0.1*y[69] - 0.1*y[70] - 0.1*y[71] - 0.1*y[72]
+	 - 0.1*y[73] - 0.1*y[74] - 0.1*y[75] - 0.1*y[76] - 0.1*y[77] - 
+	0.1*y[78] - 0.1*y[79] - 0.1*y[80] - 0.1*y[81] - 0.1*y[82] - 0.1*y[83]
+	 - 0.1*y[84] - 0.1*y[85] - 0.1*y[86] - 0.1*y[87] - 0.1*y[88] - 
+	0.1*y[89] - 0.1*y[90] - 0.1*y[91] - 0.1*y[92] - 0.1*y[93] - 0.1*y[94]
+	 - 0.1*y[95] - 0.1*y[96] - 0.1*y[97] - 0.1*y[98] - 0.1*y[99] - 
+	0.05*w[0] - 0.05*w[1] - 0.05*w[2] - 0.05*w[3] - 0.05*w[4] - 0.05*w[5]
+	 - 0.05*w[6] - 0.05*w[7] - 0.05*w[8] - 0.05*w[9] - 0.05*w[10] - 
+	0.05*w[11] - 0.05*w[12] - 0.05*w[13] - 0.05*w[14] - 0.05*w[15] - 
+	0.05*w[16] - 0.05*w[17] - 0.05*w[18] - 0.05*w[19] - 0.05*w[20] - 
+	0.05*w[21] - 0.05*w[22] - 0.05*w[23] - 0.05*w[24] - 0.05*w[25] - 
+	0.05*w[26] - 0.05*w[27] - 0.05*w[28] - 0.05*w[29] - 0.05*w[30] - 
+	0.05*w[31] - 0.05*w[32] - 0.05*w[33] - 0.05*w[34] - 0.05*w[35] - 
+	0.05*w[36] - 0.05*w[37] - 0.05*w[38] - 0.05*w[39] - 0.05*w[40] - 
+	0.05*w[41] - 0.05*w[42] - 0.05*w[43] - 0.05*w[44] - 0.05*w[45] - 
+	0.05*w[46] - 0.05*w[47] - 0.05*w[48] - 0.05*w[49] - 0.05*w[50] - 
+	0.05*w[51] - 0.05*w[52] - 0.05*w[53] - 0.05*w[54] - 0.05*w[55] - 
+	0.05*w[56] - 0.05*w[57] - 0.05*w[58] - 0.05*w[59] - 0.05*w[60] - 
+	0.05*w[61] - 0.05*w[62] - 0.05*w[63] - 0.05*w[64] - 0.05*w[65] - 
+	0.05*w[66] - 0.05*w[67] - 0.05*w[68] - 0.05*w[69] - 0.05*w[70] - 
+	0.05*w[71] - 0.05*w[72] - 0.05*w[73] - 0.05*w[74] - 0.05*w[75] - 
+	0.05*w[76] - 0.05*w[77] - 0.05*w[78] - 0.05*w[79] - 0.05*w[80] - 
+	0.05*w[81] - 0.05*w[82] - 0.05*w[83] - 0.05*w[84] - 0.05*w[85] - 
+	0.05*w[86] - 0.05*w[87] - 0.05*w[88] - 0.05*w[89] - 0.05*w[90] - 
+	0.05*w[91] - 0.05*w[92] - 0.05*w[93] - 0.05*w[94] - 0.05*w[95] - 
+	0.05*w[96] - 0.05*w[97] - 0.05*w[98] - 0.05*w[99];
+
+subject to SellLessThanDemand[0]:
+	y[0] <= 100;
+
+subject to SellLessThanDemand[1]:
+	y[1] <= 101;
+
+subject to SellLessThanDemand[2]:
+	y[2] <= 102;
+
+subject to SellLessThanDemand[3]:
+	y[3] <= 103;
+
+subject to SellLessThanDemand[4]:
+	y[4] <= 104;
+
+subject to SellLessThanDemand[5]:
+	y[5] <= 105;
+
+subject to SellLessThanDemand[6]:
+	y[6] <= 106;
+
+subject to SellLessThanDemand[7]:
+	y[7] <= 107;
+
+subject to SellLessThanDemand[8]:
+	y[8] <= 108;
+
+subject to SellLessThanDemand[9]:
+	y[9] <= 109;
+
+subject to SellLessThanDemand[10]:
+	y[10] <= 110;
+
+subject to SellLessThanDemand[11]:
+	y[11] <= 111;
+
+subject to SellLessThanDemand[12]:
+	y[12] <= 112;
+
+subject to SellLessThanDemand[13]:
+	y[13] <= 113;
+
+subject to SellLessThanDemand[14]:
+	y[14] <= 114;
+
+subject to SellLessThanDemand[15]:
+	y[15] <= 115;
+
+subject to SellLessThanDemand[16]:
+	y[16] <= 116;
+
+subject to SellLessThanDemand[17]:
+	y[17] <= 117;
+
+subject to SellLessThanDemand[18]:
+	y[18] <= 118;
+
+subject to SellLessThanDemand[19]:
+	y[19] <= 119;
+
+subject to SellLessThanDemand[20]:
+	y[20] <= 120;
+
+subject to SellLessThanDemand[21]:
+	y[21] <= 121;
+
+subject to SellLessThanDemand[22]:
+	y[22] <= 122;
+
+subject to SellLessThanDemand[23]:
+	y[23] <= 123;
+
+subject to SellLessThanDemand[24]:
+	y[24] <= 124;
+
+subject to SellLessThanDemand[25]:
+	y[25] <= 125;
+
+subject to SellLessThanDemand[26]:
+	y[26] <= 126;
+
+subject to SellLessThanDemand[27]:
+	y[27] <= 127;
+
+subject to SellLessThanDemand[28]:
+	y[28] <= 128;
+
+subject to SellLessThanDemand[29]:
+	y[29] <= 129;
+
+subject to SellLessThanDemand[30]:
+	y[30] <= 130;
+
+subject to SellLessThanDemand[31]:
+	y[31] <= 131;
+
+subject to SellLessThanDemand[32]:
+	y[32] <= 132;
+
+subject to SellLessThanDemand[33]:
+	y[33] <= 133;
+
+subject to SellLessThanDemand[34]:
+	y[34] <= 134;
+
+subject to SellLessThanDemand[35]:
+	y[35] <= 135;
+
+subject to SellLessThanDemand[36]:
+	y[36] <= 136;
+
+subject to SellLessThanDemand[37]:
+	y[37] <= 137;
+
+subject to SellLessThanDemand[38]:
+	y[38] <= 138;
+
+subject to SellLessThanDemand[39]:
+	y[39] <= 139;
+
+subject to SellLessThanDemand[40]:
+	y[40] <= 140;
+
+subject to SellLessThanDemand[41]:
+	y[41] <= 141;
+
+subject to SellLessThanDemand[42]:
+	y[42] <= 142;
+
+subject to SellLessThanDemand[43]:
+	y[43] <= 143;
+
+subject to SellLessThanDemand[44]:
+	y[44] <= 144;
+
+subject to SellLessThanDemand[45]:
+	y[45] <= 145;
+
+subject to SellLessThanDemand[46]:
+	y[46] <= 146;
+
+subject to SellLessThanDemand[47]:
+	y[47] <= 147;
+
+subject to SellLessThanDemand[48]:
+	y[48] <= 148;
+
+subject to SellLessThanDemand[49]:
+	y[49] <= 149;
+
+subject to SellLessThanDemand[50]:
+	y[50] <= 150;
+
+subject to SellLessThanDemand[51]:
+	y[51] <= 151;
+
+subject to SellLessThanDemand[52]:
+	y[52] <= 152;
+
+subject to SellLessThanDemand[53]:
+	y[53] <= 153;
+
+subject to SellLessThanDemand[54]:
+	y[54] <= 154;
+
+subject to SellLessThanDemand[55]:
+	y[55] <= 155;
+
+subject to SellLessThanDemand[56]:
+	y[56] <= 156;
+
+subject to SellLessThanDemand[57]:
+	y[57] <= 157;
+
+subject to SellLessThanDemand[58]:
+	y[58] <= 158;
+
+subject to SellLessThanDemand[59]:
+	y[59] <= 159;
+
+subject to SellLessThanDemand[60]:
+	y[60] <= 160;
+
+subject to SellLessThanDemand[61]:
+	y[61] <= 161;
+
+subject to SellLessThanDemand[62]:
+	y[62] <= 162;
+
+subject to SellLessThanDemand[63]:
+	y[63] <= 163;
+
+subject to SellLessThanDemand[64]:
+	y[64] <= 164;
+
+subject to SellLessThanDemand[65]:
+	y[65] <= 165;
+
+subject to SellLessThanDemand[66]:
+	y[66] <= 166;
+
+subject to SellLessThanDemand[67]:
+	y[67] <= 167;
+
+subject to SellLessThanDemand[68]:
+	y[68] <= 168;
+
+subject to SellLessThanDemand[69]:
+	y[69] <= 169;
+
+subject to SellLessThanDemand[70]:
+	y[70] <= 170;
+
+subject to SellLessThanDemand[71]:
+	y[71] <= 171;
+
+subject to SellLessThanDemand[72]:
+	y[72] <= 172;
+
+subject to SellLessThanDemand[73]:
+	y[73] <= 173;
+
+subject to SellLessThanDemand[74]:
+	y[74] <= 174;
+
+subject to SellLessThanDemand[75]:
+	y[75] <= 175;
+
+subject to SellLessThanDemand[76]:
+	y[76] <= 176;
+
+subject to SellLessThanDemand[77]:
+	y[77] <= 177;
+
+subject to SellLessThanDemand[78]:
+	y[78] <= 178;
+
+subject to SellLessThanDemand[79]:
+	y[79] <= 179;
+
+subject to SellLessThanDemand[80]:
+	y[80] <= 180;
+
+subject to SellLessThanDemand[81]:
+	y[81] <= 181;
+
+subject to SellLessThanDemand[82]:
+	y[82] <= 182;
+
+subject to SellLessThanDemand[83]:
+	y[83] <= 183;
+
+subject to SellLessThanDemand[84]:
+	y[84] <= 184;
+
+subject to SellLessThanDemand[85]:
+	y[85] <= 185;
+
+subject to SellLessThanDemand[86]:
+	y[86] <= 186;
+
+subject to SellLessThanDemand[87]:
+	y[87] <= 187;
+
+subject to SellLessThanDemand[88]:
+	y[88] <= 188;
+
+subject to SellLessThanDemand[89]:
+	y[89] <= 189;
+
+subject to SellLessThanDemand[90]:
+	y[90] <= 190;
+
+subject to SellLessThanDemand[91]:
+	y[91] <= 191;
+
+subject to SellLessThanDemand[92]:
+	y[92] <= 192;
+
+subject to SellLessThanDemand[93]:
+	y[93] <= 193;
+
+subject to SellLessThanDemand[94]:
+	y[94] <= 194;
+
+subject to SellLessThanDemand[95]:
+	y[95] <= 195;
+
+subject to SellLessThanDemand[96]:
+	y[96] <= 196;
+
+subject to SellLessThanDemand[97]:
+	y[97] <= 197;
+
+subject to SellLessThanDemand[98]:
+	y[98] <= 198;
+
+subject to SellLessThanDemand[99]:
+	y[99] <= 199;
+
+subject to SoldPlusReturnedLessThanBought[0]:
+	-x + y[0] + w[0] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[1]:
+	-x + y[1] + w[1] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[2]:
+	-x + y[2] + w[2] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[3]:
+	-x + y[3] + w[3] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[4]:
+	-x + y[4] + w[4] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[5]:
+	-x + y[5] + w[5] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[6]:
+	-x + y[6] + w[6] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[7]:
+	-x + y[7] + w[7] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[8]:
+	-x + y[8] + w[8] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[9]:
+	-x + y[9] + w[9] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[10]:
+	-x + y[10] + w[10] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[11]:
+	-x + y[11] + w[11] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[12]:
+	-x + y[12] + w[12] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[13]:
+	-x + y[13] + w[13] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[14]:
+	-x + y[14] + w[14] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[15]:
+	-x + y[15] + w[15] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[16]:
+	-x + y[16] + w[16] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[17]:
+	-x + y[17] + w[17] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[18]:
+	-x + y[18] + w[18] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[19]:
+	-x + y[19] + w[19] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[20]:
+	-x + y[20] + w[20] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[21]:
+	-x + y[21] + w[21] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[22]:
+	-x + y[22] + w[22] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[23]:
+	-x + y[23] + w[23] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[24]:
+	-x + y[24] + w[24] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[25]:
+	-x + y[25] + w[25] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[26]:
+	-x + y[26] + w[26] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[27]:
+	-x + y[27] + w[27] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[28]:
+	-x + y[28] + w[28] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[29]:
+	-x + y[29] + w[29] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[30]:
+	-x + y[30] + w[30] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[31]:
+	-x + y[31] + w[31] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[32]:
+	-x + y[32] + w[32] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[33]:
+	-x + y[33] + w[33] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[34]:
+	-x + y[34] + w[34] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[35]:
+	-x + y[35] + w[35] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[36]:
+	-x + y[36] + w[36] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[37]:
+	-x + y[37] + w[37] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[38]:
+	-x + y[38] + w[38] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[39]:
+	-x + y[39] + w[39] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[40]:
+	-x + y[40] + w[40] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[41]:
+	-x + y[41] + w[41] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[42]:
+	-x + y[42] + w[42] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[43]:
+	-x + y[43] + w[43] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[44]:
+	-x + y[44] + w[44] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[45]:
+	-x + y[45] + w[45] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[46]:
+	-x + y[46] + w[46] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[47]:
+	-x + y[47] + w[47] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[48]:
+	-x + y[48] + w[48] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[49]:
+	-x + y[49] + w[49] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[50]:
+	-x + y[50] + w[50] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[51]:
+	-x + y[51] + w[51] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[52]:
+	-x + y[52] + w[52] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[53]:
+	-x + y[53] + w[53] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[54]:
+	-x + y[54] + w[54] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[55]:
+	-x + y[55] + w[55] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[56]:
+	-x + y[56] + w[56] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[57]:
+	-x + y[57] + w[57] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[58]:
+	-x + y[58] + w[58] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[59]:
+	-x + y[59] + w[59] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[60]:
+	-x + y[60] + w[60] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[61]:
+	-x + y[61] + w[61] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[62]:
+	-x + y[62] + w[62] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[63]:
+	-x + y[63] + w[63] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[64]:
+	-x + y[64] + w[64] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[65]:
+	-x + y[65] + w[65] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[66]:
+	-x + y[66] + w[66] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[67]:
+	-x + y[67] + w[67] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[68]:
+	-x + y[68] + w[68] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[69]:
+	-x + y[69] + w[69] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[70]:
+	-x + y[70] + w[70] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[71]:
+	-x + y[71] + w[71] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[72]:
+	-x + y[72] + w[72] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[73]:
+	-x + y[73] + w[73] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[74]:
+	-x + y[74] + w[74] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[75]:
+	-x + y[75] + w[75] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[76]:
+	-x + y[76] + w[76] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[77]:
+	-x + y[77] + w[77] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[78]:
+	-x + y[78] + w[78] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[79]:
+	-x + y[79] + w[79] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[80]:
+	-x + y[80] + w[80] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[81]:
+	-x + y[81] + w[81] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[82]:
+	-x + y[82] + w[82] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[83]:
+	-x + y[83] + w[83] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[84]:
+	-x + y[84] + w[84] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[85]:
+	-x + y[85] + w[85] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[86]:
+	-x + y[86] + w[86] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[87]:
+	-x + y[87] + w[87] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[88]:
+	-x + y[88] + w[88] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[89]:
+	-x + y[89] + w[89] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[90]:
+	-x + y[90] + w[90] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[91]:
+	-x + y[91] + w[91] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[92]:
+	-x + y[92] + w[92] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[93]:
+	-x + y[93] + w[93] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[94]:
+	-x + y[94] + w[94] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[95]:
+	-x + y[95] + w[95] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[96]:
+	-x + y[96] + w[96] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[97]:
+	-x + y[97] + w[97] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[98]:
+	-x + y[98] + w[98] <= 0;
+
+subject to SoldPlusReturnedLessThanBought[99]:
+	-x + y[99] + w[99] <= 0;
+
+CPLEX 22.1.1: CPLEX 22.1.1: optimal solution; objective -239
+161 simplex iterations
+ampl: include news_vendor.run;

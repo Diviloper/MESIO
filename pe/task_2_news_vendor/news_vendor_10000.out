@@ -1,0 +1,22 @@
+
+parameters:
+cost                  discretization_step   prob
+demand                discretizations       recovery
+demand_lower          limit
+demand_upper          price
+
+set:   SCENARIOS
+
+variables:   w   x   y
+
+constraints:   SellLessThanDemand   SoldPlusReturnedLessThanBought
+
+objective:   CostTotal
+CPLEX 22.1.1: CPLEX 22.1.1: optimal solution; objective -239.99
+12001 simplex iterations
+
+"option abs_boundtol 1.4210854715202004e-14;"
+or "option rel_boundtol 1.1103097675757482e-16;"
+will change deduced dual values.
+
+ampl: include news_vendor.run;
