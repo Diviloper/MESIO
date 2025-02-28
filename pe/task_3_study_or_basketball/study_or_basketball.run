@@ -1,0 +1,9 @@
+reset;
+model study_or_basketball.mod;
+data study_or_basketball.dat;
+option solver cplex;
+show;
+expand;
+solve;
+
+display x1, x2, y1, y2;

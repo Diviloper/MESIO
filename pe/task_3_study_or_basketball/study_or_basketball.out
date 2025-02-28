@@ -1,0 +1,51 @@
+ampl: include study_or_basketball.run;
+
+parameters:
+N                      basketball_scenarios   study_scenarios
+basketball_hours       study_hours
+basketball_prob        study_prob
+
+variables:   x1   x2   y1   y2
+
+constraints:   BasketballHours   StudyHours   TotalHours
+
+objective:   cost_total
+minimize cost_total:
+	0.666667*y1[1] + 0.666667*y1[2] + 0.666667*y1[3] + 0.25*y2[1] + 
+	0.25*y2[2] + 0.25*y2[3] + 0.25*y2[4];
+
+subject to TotalHours:
+	x1 + x2 <= 10;
+
+subject to StudyHours[1]:
+	x1 + y1[1] >= 2;
+
+subject to StudyHours[2]:
+	x1 + y1[2] >= 2.7;
+
+subject to StudyHours[3]:
+	x1 + y1[3] >= 3.2;
+
+subject to BasketballHours[1]:
+	x2 + y2[1] >= 7.8;
+
+subject to BasketballHours[2]:
+	x2 + y2[2] >= 8;
+
+subject to BasketballHours[3]:
+	x2 + y2[3] >= 8.5;
+
+subject to BasketballHours[4]:
+	x2 + y2[4] >= 9.3;
+
+CPLEX 22.1.1:               CPLEX 22.1.1: optimal solution; objective 1.433333333
+6 simplex iterations
+x1 = 2.7
+x2 = 7.3
+
+:   y1    y2     :=
+1   0     0.5
+2   0     0.7
+3   0.5   1.2
+4    .    2
+;

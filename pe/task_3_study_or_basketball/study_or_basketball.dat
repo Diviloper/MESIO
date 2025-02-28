@@ -1,0 +1,21 @@
+# Stochastic Parameters of Study or Play Basketball game
+
+param study_scenarios := 3;
+param basketball_scenarios := 4;
+
+param N := 10;
+
+# Stochastic Params
+
+param study_hours :=
+1	2
+2	2.7
+3	3.2
+;
+
+param basketball_hours :=
+1	7.8
+2	8
+3	8.5
+4	9.3
+;
