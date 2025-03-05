@@ -40,6 +40,8 @@ function primal_affine_scaling(P::Problem, x⁰::VF, ϵ::Float64=10e-8, ρ::Floa
     @debug "Auxiliar variables" diag(D)' y' gap[k]
 
     while gap[k] > ϵ
+
+        @assert A*x[k] ≈ b "Problem no longer feasible"
         
         z = c - Aᵀ * y
         push!(Δ, -D * z) # Δₖ = -Dz
@@ -64,7 +66,7 @@ function primal_affine_scaling(P::Problem, x⁰::VF, ϵ::Float64=10e-8, ρ::Floa
         @info "New point x[$k]" x[k]' c'x[k] gap[k]
 
         @info "Iteration $k"
-        @debug "Auxiliar variables" diag(D)' y' gap[k]
+        @debug "Auxiliar variables" diag(D)' y'
     end
 
     return Result(x, Δ, gap)
