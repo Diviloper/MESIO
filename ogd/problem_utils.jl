@@ -18,6 +18,7 @@ end
 function make_full_rank(P::Problem)::Problem
     if rank(P.A) == size(P.A, 1)
         @info "Problem is already full rank"
+        return P
     end
     @info "Removing empty constraints"
     P1 = remove_empty_constraints(P)
