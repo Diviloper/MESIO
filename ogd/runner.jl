@@ -3,7 +3,7 @@ using MAT
 function run_from_mat_file(path::String, ϵ::Float64=10e-8, ρ::Float64=0.995)::Tuple{Problem, Result}
     problem = read_from_mat_file(path)
 
-    if rank(problem.A) != size(A, 1)
+    if rank(problem.A) != size(problem.A, 1)
         problem = make_full_rank(problem)
     end
 
