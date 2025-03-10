@@ -1,9 +1,6 @@
 using LinearAlgebra, LinearSolve, SparseArrays, Logging
 
-include("types.jl")
-include("problem_utils.jl")
-
-function primal_affine_scaling(P::Problem, ϵ::Float64=10e-7, ρ::Float64=0.995)::Result
+function primal_affine_scaling(P::StandardProblem, ϵ::Float64=10e-7, ρ::Float64=0.995)::Result
     PM, x̄⁰ = expand_problem(P)
 
     (; o, x, Δ, gap) = primal_affine_scaling(PM, x̄⁰, ϵ, ρ)
@@ -15,7 +12,7 @@ function primal_affine_scaling(P::Problem, ϵ::Float64=10e-7, ρ::Float64=0.995)
     return Result([xᵢ[1:end-1] for xᵢ in x], [Δᵢ[1:end-1] for Δᵢ in Δ], gap)
 end
 
-function primal_affine_scaling(P::Problem, x⁰::VF, ϵ::Float64=10e-8, ρ::Float64=0.995)::Result
+function primal_affine_scaling(P::StandardProblem, x⁰::VF, ϵ::Float64=10e-8, ρ::Float64=0.995)::Result
     # Constants
     (; A, b, c) = P
     Aᵀ = transpose(A)

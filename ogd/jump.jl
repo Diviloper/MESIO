@@ -1,6 +1,6 @@
 using JuMP
 
-function solve_with_jump((; A, b, c)::Problem, optimizer)::Vector{Float64}
+function solve_with_jump((; A, b, c)::StandardProblem, optimizer)::Vector{Float64}
     model = Model(optimizer)
     set_silent(model)
 

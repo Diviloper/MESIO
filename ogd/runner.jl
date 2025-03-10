@@ -12,7 +12,7 @@ function run_from_mat_file(path::String, ϵ::Float64=10e-8, ρ::Float64=0.995)::
     return problem, result
 end
 
-function read_from_mat_file(path::String)::Problem
+function read_from_mat_file(path::String)::StandardProblem
     vars = matread(path)["Problem"]
-    return Problem(vars["A"], vars["b"], vars["aux"]["c"])
+    return StandardProblem(vars["A"], vars["b"], vars["aux"]["c"])
 end
