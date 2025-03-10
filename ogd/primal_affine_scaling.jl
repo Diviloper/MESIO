@@ -1,6 +1,6 @@
 using LinearAlgebra, LinearSolve, SparseArrays, Logging
 
-function primal_affine_scaling(P::StandardProblem, ϵ::Float64=10e-7, ρ::Float64=0.995)::Result
+function primal_affine_scaling(P::StandardProblem, ϵ::Float64=10e-6, ρ::Float64=0.995)::Result
     PM, x̄⁰ = expand_problem(P)
 
     (; o, x, Δ, gap) = primal_affine_scaling(PM, x̄⁰, ϵ, ρ)
@@ -9,18 +9,25 @@ function primal_affine_scaling(P::StandardProblem, ϵ::Float64=10e-7, ρ::Float6
         @warn "Problem is unfeasible: xₙ₊₁ = $(o[end])"
     end
 
-    return Result([xᵢ[1:end-1] for xᵢ in x], [Δᵢ[1:end-1] for Δᵢ in Δ], gap)
+    return Result(x[:, 1:end-1], Δ[:, 1:end-1], gap)
 end
 
-function primal_affine_scaling(P::StandardProblem, x⁰::VF, ϵ::Float64=10e-8, ρ::Float64=0.995)::Result
+function primal_affine_scaling(P::ExtendedProblem, ϵ::Float64=10e-6, ρ::Float64=0.995)::Result
+    (SP, m, n) = standardize(P)
+
+    (; o, x, Δ, gap) = primal_affine_scaling(SP, ϵ, ρ)
+
+    # Keep only original variables
+    return Result(x[:, 1:n], Δ[:, 1:n], gap)
+end
+
+function primal_affine_scaling(P::StandardProblem, x⁰::VF, ϵ::Float64=10e-6, ρ::Float64=0.995)::Result
     # Constants
     (; A, b, c) = P
     Aᵀ = transpose(A)
 
     # Checks
-    if rank(A) != size(A, 1)
-        throw("Matrix A is not full-rank :(. Transform the input and try again please :)")
-    end
+    @assert rank(A) == size(A, 1) "Matrix A must be full-rank (rank: $(rank(A)), #rows: $(size(A, 1)))"
 
     # History
     x::VVF = [x⁰]
@@ -43,9 +50,7 @@ function primal_affine_scaling(P::StandardProblem, x⁰::VF, ϵ::Float64=10e-8, 
         z = c - Aᵀ * y
         push!(Δ, -D * z) # Δₖ = -Dz
 
-        if all(Δ[k] .>= 0)
-            throw("Unbounded Problem")
-        end
+        @assert !all(Δ[k] .>= 0) "Unbounded Problem"
 
         α = ρ * minimum(-xᵏᵢ / Δᵏᵢ for (xᵏᵢ, Δᵏᵢ) = zip(x[k], Δ[k]) if Δᵏᵢ <= 0)
         push!(x, x[k] + α * Δ[k]) # xᵏ = αΔᵏ
