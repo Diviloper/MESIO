@@ -3,15 +3,15 @@ using InvertedIndices
 
 function make_full_rank(P::StandardProblem)::StandardProblem
     if rank(P.A) == size(P.A, 1)
-        @info "Problem is already full rank"
+        @debug "Problem is already full rank"
         return P
     end
-    @info "Removing empty constraints"
+    @debug "Removing empty constraints"
     P1 = remove_empty_constraints(P)
     if rank(P1.A) == size(P1.A, 1)
         return P1
     end
-    @info "Removing linearly dependent constraints using QR decomposition"
+    @debug "Removing linearly dependent constraints using QR decomposition"
     P2 = remove_linear_dependencies(P1)
 
     if rank(P2.A) == size(P2.A, 1)

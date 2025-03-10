@@ -1,6 +1,6 @@
 using JuMP
 
-function solve_with_jump((; A, b, c)::StandardProblem, optimizer)::Vector{Float64}
+function solve_with_jump((; A, b, c)::StandardProblem, optimizer)::VF
     model = Model(optimizer)
     set_silent(model)
 
@@ -14,4 +14,10 @@ function solve_with_jump((; A, b, c)::StandardProblem, optimizer)::Vector{Float6
     optimize!(model)
     
     return value.(x)
+end
+
+function solve_with_jump(EP::ExtendedProblem, optimizer)::VF
+    (P, m, n) = standardize(EP)
+    x = solve_with_jump(P, optimizer)
+    return x[1:n]
 end

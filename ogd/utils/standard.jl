@@ -1,4 +1,4 @@
-function standardize((; A, b, c, lo, hi)::ExtendedProblem)::Tuple{StandardProblem,Int}
+function standardize((; A, b, c, lo, hi)::ExtendedProblem)::Tuple{StandardProblem, Int, Int}
     original_constraints = size(A, 1)
     original_variables = size(A, 2)
 
@@ -51,5 +51,5 @@ function standardize((; A, b, c, lo, hi)::ExtendedProblem)::Tuple{StandardProble
         push!(b̂, hi[var_index])
     end
 
-    return StandardProblem(sparse(I, J, V), b̂, hcat(c, zeros(num_variables - original_variables))), original_constraints, original_variables
+    return StandardProblem(sparse(I, J, V), b̂, vcat(c, zeros(num_variables - original_variables))), original_constraints, original_variables
 end

@@ -1,6 +1,6 @@
-using LinearAlgebra, LinearSolve, SparseArrays, Logging
+using LinearAlgebra, LinearSolve, Logging
 
-function primal_affine_scaling(P::StandardProblem, ϵ::Float64=10e-6, ρ::Float64=0.995)::Result
+function primal_affine_scaling(P::StandardProblem, ϵ::Float64=1e-6, ρ::Float64=0.995)::Result
     PM, x̄⁰ = expand_problem(P)
 
     (; o, x, Δ, gap) = primal_affine_scaling(PM, x̄⁰, ϵ, ρ)
@@ -9,25 +9,30 @@ function primal_affine_scaling(P::StandardProblem, ϵ::Float64=10e-6, ρ::Float6
         @warn "Problem is unfeasible: xₙ₊₁ = $(o[end])"
     end
 
-    return Result(x[:, 1:end-1], Δ[:, 1:end-1], gap)
+    return Result([xᵢ[1:end-1] for xᵢ in x], [Δᵢ[1:end-1] for Δᵢ in Δ], gap)
 end
 
-function primal_affine_scaling(P::ExtendedProblem, ϵ::Float64=10e-6, ρ::Float64=0.995)::Result
+function primal_affine_scaling(P::ExtendedProblem, ϵ::Float64=1e-6, ρ::Float64=0.995)::Result
     (SP, m, n) = standardize(P)
 
     (; o, x, Δ, gap) = primal_affine_scaling(SP, ϵ, ρ)
 
     # Keep only original variables
-    return Result(x[:, 1:n], Δ[:, 1:n], gap)
+    return Result([xᵢ[1:n] for xᵢ in x], [Δᵢ[1:n] for Δᵢ in Δ], gap)
 end
 
-function primal_affine_scaling(P::StandardProblem, x⁰::VF, ϵ::Float64=10e-6, ρ::Float64=0.995)::Result
+function primal_affine_scaling(P::StandardProblem, x⁰::VF, ϵ::Float64=1e-6, ρ::Float64=0.995)::Result
     # Constants
     (; A, b, c) = P
     Aᵀ = transpose(A)
 
     # Checks
-    @assert rank(A) == size(A, 1) "Matrix A must be full-rank (rank: $(rank(A)), #rows: $(size(A, 1)))"
+    if rank(A) != size(A, 1)
+        @info "Problem is not full rank. Fixing."
+        return primal_affine_scaling(make_full_rank(P), x⁰, ϵ, ρ)
+    end
+
+    @info "Starting Primal-Affine Scaling"
 
     # History
     x::VVF = [x⁰]
@@ -40,7 +45,7 @@ function primal_affine_scaling(P::StandardProblem, x⁰::VF, ϵ::Float64=10e-6, 
     y = compute(A * D * Aᵀ, A * D * c)
     push!(gap, dual_gap(c'x[k], b'y))
     
-    @info "Iteration $k"
+    @debug "Iteration $k"
     @debug "Auxiliar variables" diag(D)' y' gap[k]
 
     while gap[k] > ϵ
@@ -65,11 +70,13 @@ function primal_affine_scaling(P::StandardProblem, x⁰::VF, ϵ::Float64=10e-6, 
         @debug "Gap variables" c'x[k] b'y
         push!(gap, dual_gap(c'x[k], b'y))
         
-        @info "New point x[$k]" x[k]' c'x[k] gap[k]
+        @debug "New point x[$k]" x[k]' c'x[k] gap[k]
 
-        @info "Iteration $k"
+        @debug "Iteration $k"
         @debug "Auxiliar variables" diag(D)' y'
     end
+
+    @info "Primal-Affine Scaling finished after $k iterations with cost $(c'x[k])"
 
     return Result(x, Δ, gap)
 end
@@ -77,6 +84,6 @@ end
 dual_gap(cᵀx::Float64, bᵀy::Float64)::Float64 = abs(cᵀx - bᵀy) / (1 + abs(cᵀx))
     
 
-function compute(A::MF, b::VF)::VF
+function compute(A::SMF, b::VF)::VF
     return solve(LinearProblem(A, b)).u
 end
