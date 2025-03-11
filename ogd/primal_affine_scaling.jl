@@ -1,4 +1,4 @@
-using LinearAlgebra, LinearSolve, Logging
+using LinearAlgebra, LinearSolve, Logging, ProgressMeter, SparseArrays
 
 function primal_affine_scaling(P::StandardProblem, ϵ::Float64=1e-6, ρ::Float64=0.995)::Result
     PM, x̄⁰ = expand_problem(P)
@@ -44,32 +44,36 @@ function primal_affine_scaling(P::StandardProblem, x⁰::VF, ϵ::Float64=1e-6, �
     D = Diagonal(x[k])^2
     y = compute(A * D * Aᵀ, A * D * c)
     push!(gap, dual_gap(c'x[k], b'y))
-    
+
     @debug "Iteration $k"
     @debug "Auxiliar variables" diag(D)' y' gap[k]
 
-    while gap[k] > ϵ
+    progress = ProgressThresh(ϵ; desc="Minimizing:", showspeed=true)
 
-        @assert A*x[k] ≈ b "Problem no longer feasible"
-        
+    while gap[k] > ϵ
+        update!(progress, gap[k]; showvalues=[("Objective function", c'x[k])])
+
+        @assert A * x[k] ≈ b "Problem no longer feasible: $((A*x[k] - b)')"
+
         z = c - Aᵀ * y
         push!(Δ, -D * z) # Δₖ = -Dz
 
         @assert !all(Δ[k] .>= 0) "Unbounded Problem"
 
-        α = ρ * minimum(-xᵏᵢ / Δᵏᵢ for (xᵏᵢ, Δᵏᵢ) = zip(x[k], Δ[k]) if Δᵏᵢ <= 0)
-        push!(x, x[k] + α * Δ[k]) # xᵏ = αΔᵏ
+        α = ρ * minimum(-xᵏᵢ / Δᵏᵢ for (xᵏᵢ, Δᵏᵢ) = zip(x[k], Δ[k]) if Δᵏᵢ < 0)
+        push!(x, x[k] + α * Δ[k])
 
         @debug "Step $k variables" α Δ[k]
 
         k += 1
 
         D = Diagonal(x[k])^2
-        y = compute(A * D * Aᵀ, A * D * c)
-        
+        AD = A * D
+        y = compute(AD * Aᵀ, AD * c)
+
         @debug "Gap variables" c'x[k] b'y
         push!(gap, dual_gap(c'x[k], b'y))
-        
+
         @debug "New point x[$k]" x[k]' c'x[k] gap[k]
 
         @debug "Iteration $k"
@@ -82,8 +86,8 @@ function primal_affine_scaling(P::StandardProblem, x⁰::VF, ϵ::Float64=1e-6, �
 end
 
 dual_gap(cᵀx::Float64, bᵀy::Float64)::Float64 = abs(cᵀx - bᵀy) / (1 + abs(cᵀx))
-    
+
 
 function compute(A::SMF, b::VF)::VF
-    return solve(LinearProblem(A, b)).u
+    return solve(LinearProblem(Symmetric(A), b)).u
 end
