@@ -6,6 +6,7 @@ function standardize((; A, b, c, lo, hi)::ExtendedProblem)::Tuple{StandardProble
     slack_indices = findall(!=(Inf), hi)
 
     if size(surplus_indices, 1) == 0 && size(slack_indices, 1) == 0
+        @info "No standardization required"
         return StandardProblem(A, b, c), original_constraints, original_variables
     end
 
@@ -50,6 +51,8 @@ function standardize((; A, b, c, lo, hi)::ExtendedProblem)::Tuple{StandardProble
 
         push!(b̂, hi[var_index])
     end
+
+    @info "Standardization applied: #Constraints: $original_constraints -> $num_constraints, #Variables: $original_variables -> $num_variables"
 
     return StandardProblem(sparse(I, J, V), b̂, vcat(c, zeros(num_variables - original_variables))), original_constraints, original_variables
 end

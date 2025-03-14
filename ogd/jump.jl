@@ -1,6 +1,6 @@
 using JuMP
 
-function solve_with_jump((; A, b, c)::StandardProblem, optimizer)::VF
+function solve_with_jump((; A, b, c)::StandardProblem, optimizer)::Tuple{VF, Model}
     model = Model(optimizer)
     set_silent(model)
 
@@ -13,11 +13,11 @@ function solve_with_jump((; A, b, c)::StandardProblem, optimizer)::VF
 
     optimize!(model)
     
-    return value.(x)
+    return value.(x), model
 end
 
-function solve_with_jump(EP::ExtendedProblem, optimizer)::VF
+function solve_with_jump(EP::ExtendedProblem, optimizer)::Tuple{VF, Model}
     (P, m, n) = standardize(EP)
-    x = solve_with_jump(P, optimizer)
-    return x[1:n]
+    x, model = solve_with_jump(P, optimizer)
+    return x[1:n], model
 end
