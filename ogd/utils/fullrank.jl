@@ -14,11 +14,11 @@ function make_full_rank(P::StandardProblem)::StandardProblem
     @debug "Removing linearly dependent constraints using QR decomposition"
     P2 = remove_linear_dependencies(P1)
 
-    if rank(P2.A) == size(P2.A, 1)
-        return P1
+    if rank(P2.A) != size(P2.A, 1)
+        @warn "Couldn't make A full-rank"
     end
 
-    throw("Couldn't make A full-rank")
+    return P2
 end
 
 function remove_empty_constraints((; A, b, c)::StandardProblem)::StandardProblem

@@ -5,7 +5,13 @@ const VVF = Vector{VF}
 const MF = Matrix{Float64}
 const SMF = SparseMatrixCSC{Float64}
 
-@enum StopReason stop_gap_reached=1 stop_small_ρ=2 stop_cholesky_fail=3 stop_error=4
+@enum StopReason begin
+    stop_gap_reached
+    stop_small_ρ
+    stop_cholesky_fail
+    stop_rank
+    stop_error
+end
 
 struct StandardProblem
     A::SMF
@@ -30,9 +36,10 @@ struct Result
     gap::VF
     iterations::Int
     reason::StopReason
+    feasible::Bool
 end
-Result(o, x, Δ, gap, reason) = Result(o, x, Δ, gap, size(x, 1), reason)
-Result(x, Δ, gap, reason) = Result(x[end], x, Δ, gap, size(x, 1), reason)
+Result(o, x, Δ, gap, reason, feasible) = Result(o, x, Δ, gap, size(x, 1), reason, feasible)
+Result(x, Δ, gap, reason, feasible) = Result(x[end], x, Δ, gap, size(x, 1), reason, feasible)
 
 struct Summary
     iterations::Int64
