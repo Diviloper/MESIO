@@ -29,18 +29,6 @@ struct ExtendedProblem
 end
 ExtendedProblem(A, b::MF, c::MF, lo::MF, hi::MF) = ExtendedProblem(A, b[:, 1], c[:, 1], lo[:, 1], hi[:, 1])
 
-struct Result
-    o::VF
-    x::VVF
-    Δ::VVF
-    gap::VF
-    iterations::Int
-    reason::StopReason
-    feasible::Bool
-end
-Result(o, x, Δ, gap, reason, feasible) = Result(o, x, Δ, gap, size(x, 1), reason, feasible)
-Result(x, Δ, gap, reason, feasible) = Result(x[end], x, Δ, gap, size(x, 1), reason, feasible)
-
 struct Summary
     iterations::Int64
     time::Float64
