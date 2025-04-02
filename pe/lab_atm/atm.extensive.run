@@ -1,0 +1,15 @@
+# ----------------------------------------
+# Runner for extensive version of
+# the ATM Money Problem
+# ----------------------------------------
+
+reset;
+
+model atm.extensive.mod;
+data atm.dat;
+
+option solver cplex;
+
+solve;
+
+display x, y;
