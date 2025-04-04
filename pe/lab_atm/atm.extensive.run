@@ -12,4 +12,4 @@ option solver cplex;
 
 solve;
 
-display x, y;
+display y, x, Total_Cost;
