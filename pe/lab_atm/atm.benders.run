@@ -1,0 +1,68 @@
+# ----------------------------------------
+# Runner for bender's decomposition of
+# the ATM Money Problem
+# ----------------------------------------
+
+reset;
+
+model atm.benders.mod
+data atm.dat;
+
+option solver cplex;
+option omit_zero_rows 1;
+option solver_msg 0;
+option cplex_options 'outlev=0 presolve=0';
+option show_boundtol 0;
+
+# Problem declaration
+problem Master: X, Z, Total_Cost, Cuts;
+problem Sub: U, Dual_Cost, MissingCost;
+
+suffix unbdd OUT;
+
+# Initializations
+let n_cuts := 0;
+let Z := 0;
+let x := u;
+
+param GAP default Infinity;
+param epsilon default 1.0e-5;
+
+repeat {
+    printf "-------------------------------------------------------\n";
+    printf "Iteration %d\n", n_cuts + 1;
+    printf "-------------------------------------------------------\n";
+
+    printf "Solving Subproblem\n";
+    solve Sub > ./tmp.rubbish;
+    display Sub.result, Dual_Cost;
+
+    let n_cuts := n_cuts + 1;
+    if Sub.result = "unbounded" then {
+        printf "Subproblem Unbounded -> Adding Ray Cut\n";
+
+        let cut_type[n_cuts] := "ray";
+        let {i in s} y[i, n_cuts] := U[i].unbdd;
+    }
+    else {
+        let GAP := Dual_Cost - Total_Cost;
+
+        if GAP <= epsilon then break;
+        
+        printf "Subproblem Solved -> Adding Point Cut\n";
+
+        display GAP;
+
+        let cut_type[n_cuts] := "point";
+        let {i in s} y[i, n_cuts] := U[i];
+    }
+
+    printf "\nSolving Master Problem\n";
+    solve Master > ./tmp.rubbish;
+
+    display Master.result, X, Z;
+
+    let x := X;
+}
+
+display X, Total_Cost;
