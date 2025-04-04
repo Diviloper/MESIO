@@ -1,0 +1,7 @@
+model extensive.mod;
+data network_design.dat;
+option solver cplex;
+
+solve;
+display y;
+display z;

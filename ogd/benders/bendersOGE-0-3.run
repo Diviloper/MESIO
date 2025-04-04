@@ -1,0 +1,30 @@
+# CHANGE AND ADD WHATEVER MIGHT BE NECESSARY
+model bendersOGE-0-3.mod;
+data bendersOGE.dat;
+option solver cplex;
+
+#definición de los problemas
+problem SUBPR: xl,I,caps,zd;
+problem MasterP3: zmp3,y,Bcut,ZMP3;
+
+
+let nCUT := 0;  # contador
+let {(i,j) in Ahat} yb[i,j]:=0;  # INIT. VALUES
+                                  
+
+##### resolución mediante el método de Benders
+for { } { 
+     RESOLVE SUBPROBLEM
+    
+    display #valor del subproblema
+
+
+    let {(i,j) in Ahat, l in O} restric[i,j,l,nCUT]:=  ; ## COMPLETE
+    let {i in N, l in O} u[i,l,nCUT]:=   ; ## COMPLETE
+
+
+    RESOLVE MASTER PROBLEM
+
+   let {(i,j) in Ahat} yb[i,j]:=y[i,j];  
+}
+
