@@ -12,15 +12,17 @@ param f {(i,j) in Ahat} := 10 * (abs(xc[i] - xc[j]) + 6 * abs(yc[i] - yc[j])); #
 param rho>0; # Maximum arc capacity
 
 # Flow constraints
-node I {i in N, l in O}: net_out=t[i,l];
-arc xl {(i,j) in AA, l in O}>=0: from I [i,l], to I [j,l];
+node I {i in N, l in O}: net_out = t[i,l];
+arc xl {(i,j) in AA, l in O} >= 0: from I [i,l], to I [j,l];
 
 var y{(i,j) in Ahat} binary; # Whether arc is built or not
 
 minimize z: 
-   sum {(i,j) in Ahat} f[i,j]*y[i,j]+
-   sum{l in O} (sum {(i,j) in AA} c[i,j,l]*xl[i,j,l]);
+   sum {(i,j) in Ahat} f[i,j] * y[i,j] +
+   sum {l in O} (sum {(i,j) in AA} c[i,j,l] * xl[i,j,l]);
 
 # Maximum capacity constraint
 subject to caps1 {(i,j) in Ahat, l in O}:
-    xl[i,j,l]<=rho*y[i,j];
+    xl[i,j,l] <= rho * y[i,j];
+
+# subject to no_new {(i, j) in Ahat}: y[i, j] = 0;

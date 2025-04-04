@@ -16,7 +16,7 @@ param yb {(i,j) in Ahat};
 param Niter; # Current Iteration
 param nCUT;  # Number of cuts
 param restric {(i,j) in Ahat, l in O,k in 1..nCUT};
-param ybk {(i,j) in Ahat,k in 1..nCUT};
+param ybk {(i,j) in Ahat,k in 1..nCUT}; # Arc constructed in iteration k
 
 # Flow restrictions
 node I {i in N, l in O}: net_out=t[i,l];
@@ -26,20 +26,23 @@ var y{(i,j) in Ahat} binary; # Whether arc is built or not
 
 
 # Subproblem
-minimize zd: sum{l in O} (sum {(i,j) in AA} c[i,j,l]*xl[i,j,l]);
+minimize zd: sum{l in O} (sum {(i,j) in AA} c[i,j,l] * xl[i,j,l]);
 
 subject to caps {(i,j) in Ahat, l in O}:
-    xl[i,j,l]<=rho*yb[i,j];
+    xl[i,j,l] <= rho * yb[i,j];
 
 # Master problem (yb)
-param u {i in N, l in O,k in 1..nCUT}<=0;
+param u {i in N, l in O, k in 1..nCUT}<=0;
 var zmp3;
 
 minimize ZMP3: zmp3;
 
-#
 subject to Bcut {k in 1..nCUT}:
-    zmp3 >= 
-    (sum {(i,j) in Ahat} f[i,j]*y[i,j])
-    + sum {l in O}
-    +  COMPLETE;      # COMPLETE
+    zmp3 >=
+    sum {(i,j) in Ahat} (f[i,j] * y[i,j])
+    + 
+    sum {l in O} (
+        sum {i in N} t[i, l] * u[i,l,k]
+        - rho * sum{(i,j) in Ahat: ybk[i,j,k] = 0} restric[i,j,l,k] * y[i,j]
+    )
+;

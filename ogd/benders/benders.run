@@ -1,0 +1,44 @@
+model benders.mod;
+data network_design.dat;
+option solver cplex;
+
+# Problem definition
+problem SUBPR: xl,I,caps,zd;
+problem MASTER: zmp3,y,Bcut,ZMP3;
+
+
+# Initializations
+let nCUT := 1;
+let {(i,j) in Ahat} yb[i,j]:=0;  # INIT. VALUES
+let {(i,j) in Ahat} ybk[i,j,1]:=0;  # INIT. VALUES
+                                  
+
+# Benders' Iterations
+repeat { 
+   printf "\nIteration %d \n\n", nCUT;
+   #   RESOLVE SUBPROBLEM
+   solve SUBPR;
+
+   display SUBPR.result;
+      
+   # display xl, zd, I.dual;
+
+
+   let {(i,j) in Ahat, l in O} restric[i,j,l,nCUT]:= abs(caps.dual[i,j,l]);
+   let {i in N, l in O} u[i,l,nCUT]:= I.dual[i, l];
+
+
+   # RESOLVE MASTER PROBLEM
+   solve MASTER;
+
+   # display y, zmp3;
+   display y;
+
+   let nCUT := nCUT + 1;
+
+   let {(i,j) in Ahat} yb[i,j] := y[i,j];
+   let {(i,j) in Ahat} ybk[i,j,nCUT] := y[i,j];
+
+   if nCUT == 5 then break;
+}
+
