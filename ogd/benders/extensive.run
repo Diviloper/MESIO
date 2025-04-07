@@ -1,7 +1,12 @@
+# ---------------------------------------------
+# Runner for the Network Distribution Problem
+# ---------------------------------------------
+
+reset;
+
 model extensive.mod;
 data network_design.dat;
 option solver cplex;
 
 solve;
-display y;
-display z;
+display y, Total_Cost;
