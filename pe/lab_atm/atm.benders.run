@@ -15,54 +15,56 @@ option cplex_options 'outlev=0 presolve=0';
 option show_boundtol 0;
 
 # Problem declaration
-problem Master: X, Z, Total_Cost, Cuts;
-problem Sub: U, Dual_Cost, MissingCost;
+problem Master: x, z, Total_Cost, Cuts;
+problem Sub: u, Dual_Cost, MissingCost;
 
 suffix unbdd OUT;
 
 # Initializations
-let n_cuts := 0;
-let Z := 0;
-let x := u;
+let NCuts := 0;
+let z := 0;
+let X := U;
 
 param GAP default Infinity;
 param epsilon default 1.0e-5;
 
 repeat {
     printf "-------------------------------------------------------\n";
-    printf "Iteration %d\n", n_cuts + 1;
+    printf "Iteration %d\n", NCuts + 1;
     printf "-------------------------------------------------------\n";
 
     printf "Solving Subproblem\n";
     solve Sub > ./tmp.rubbish;
     display Sub.result, Dual_Cost;
 
-    let n_cuts := n_cuts + 1;
+    let NCuts := NCuts + 1;
     if Sub.result = "unbounded" then {
         printf "Subproblem Unbounded -> Adding Ray Cut\n";
 
-        let cut_type[n_cuts] := "ray";
-        let {i in s} y[i, n_cuts] := U[i].unbdd;
+        display u.unbdd;
+        let CutType[NCuts] := "ray";
+        let {i in S} Y[i, NCuts] := u[i].unbdd;
     }
     else {
-        let GAP := Dual_Cost - Total_Cost;
+        let GAP := Dual_Cost - z;
+        
+        display GAP;
 
         if GAP <= epsilon then break;
         
         printf "Subproblem Solved -> Adding Point Cut\n";
 
-        display GAP;
 
-        let cut_type[n_cuts] := "point";
-        let {i in s} y[i, n_cuts] := U[i];
+        let CutType[NCuts] := "point";
+        let {i in S} Y[i, NCuts] := u[i];
     }
 
     printf "\nSolving Master Problem\n";
     solve Master > ./tmp.rubbish;
 
-    display Master.result, X, Z;
+    display Master.result, x, z, Total_Cost;
 
-    let x := X;
+    let X := x;
 }
 
-display X, Total_Cost;
+display x, Total_Cost;

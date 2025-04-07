@@ -2,23 +2,23 @@
 # ATM Money Problem Model
 # ----------------------------------------
 
-set s; # Scenarios
+set S; # Scenarios
 
-param l >= 0; 	# Minimum money to be deposited
-param u > l; 	# Maximum money to be deposited
+param L >= 0; 	# Minimum money to be deposited
+param U > L; 	# Maximum money to be deposited
 
-param c; # Cost of deposited money €/€
-param q; # Cost of lack of money €/€
+param C; # Cost of deposited money €/€
+param Q; # Cost of lack of money €/€
 
-param p {s} >= 0 <= 1; 	# Probability of each scenario
-param d {s} >= 0; 		# Demand of each scenario
+param P {S} >= 0 <= 1; 	# Probability of each scenario
+param D {S} >= 0; 		# Demand of each scenario
 
-var x >= l <= u; 	   # Amount deposited
-var y {s} >= 0;		# Missing amount in each scenario
+var x >= L <= U; 	   # Amount deposited
+var y {S} >= 0;		# Missing amount in each scenario
 
 minimize Total_Cost:
-   c*x +
-   sum {i in s} p[i] * q * y[i];
+   C*x +
+   sum {i in S} P[i] * Q * y[i];
 
-subj to Demand {i in s}:
-	x + y[i] >= d[i]
+subj to Demand {i in S}:
+	x + y[i] >= D[i]
