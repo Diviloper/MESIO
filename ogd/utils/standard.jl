@@ -34,7 +34,7 @@ function standardize((; A, b, c, lo, hi)::ExtendedProblem)::Tuple{StandardProble
         push!(J, var_index)
         push!(V, 1)
 
-        push!(b̂, lo[var_index] != Inf ? lo[var_index] : -10^20)
+        push!(b̂, lo[var_index] != -Inf ? lo[var_index] : -10^12)
     end
 
     # Add slack variable and constraint 
