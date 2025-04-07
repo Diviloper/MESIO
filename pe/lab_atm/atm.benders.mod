@@ -4,40 +4,40 @@
 # ----------------------------------------
 
 # Common Params
-set s;                  # Scenarios
+set S;                  # Scenarios
 
-param p {s} >= 0 <= 1; 	# Probability of each scenario
-param d {s} >= 0; 		# Demand of each scenario
+param P {S} >= 0, <= 1; # Probability of each scenario
+param D {S} >= 0; 		# Demand of each scenario
 
 
 # Master Problem
-param n_cuts >= 0 integer;   # Number of cuts
-param cut_type {1..n_cuts}   # Type of each cut
+param NCuts >= 0 integer;   # Number of cuts
+param CutType {1..NCuts}    # Type of each cut
    symbolic within {"point", "ray"};
 
-param l >= 0; 	            # Minimum money to be deposited
-param u > l; 	            # Maximum money to be deposited
+param L >= 0; 	            # Minimum money to be deposited
+param U > L; 	            # Maximum money to be deposited
 
-param c;                   # Cost of deposited money €/€
+param C;                   # Cost of deposited money €/€
 
-param y {s, 1..n_cuts};	# Missing amount in each scenario
+param Y {S, 1..NCuts};	   # Missing amount in each scenario
 
-var X >= l <= u; 	         # Amount deposited
-var Z;                     # Maximum cost for missing money
+var x >= L, <= U; 	      # Amount deposited
+var z;                     # Maximum cost for missing money
 
-minimize Total_Cost: c * X + Z;
+minimize Total_Cost: C * x + z;
 
-subj to Cuts {k in 1..n_cuts}:
-   if cut_type[k] = "point" then Z else 0 >=
-      sum {i in s} y[i,k] * (d[i] - X);
+subj to Cuts {k in 1..NCuts}:
+   (if CutType[k] = "point" then z) >=
+      sum {i in S} Y[i,k] * (D[i] - x);
 
 
 # Subproblem
-param q; # Cost of lack of money €/€
-param x; # Amount deposited
+param Q; # Cost of lack of money €/€
+param X; # Amount deposited
 
-var U {s};
+var u {S} >= 0;
 
-maximize Dual_Cost: sum{i in s} U[i] * (d[i] - x);
+maximize Dual_Cost: sum{i in S} u[i] * (D[i] - X);
 
-subj to MissingCost {i in s}: U[i] <= p[i] * q;
+subj to MissingCost {i in S}: u[i] <= P[i] * Q;
