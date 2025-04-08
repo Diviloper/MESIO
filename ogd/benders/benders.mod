@@ -13,7 +13,6 @@ set AA:=A union Ahat;      # All Arcs
 param XC {N}; # Node X Coordinate
 param YC {N}; # Node Y Coordinate
 param T {i in N,l in O}; # Out Flow
-param F {(i,j) in Ahat} := 10 * (abs(XC[i] - XC[j]) + 6 * abs(YC[i] - YC[j])); # Fixed Cost
 param RHO > 0; # Maximum arc capacity
 
 # --------------------
@@ -22,14 +21,13 @@ param RHO > 0; # Maximum arc capacity
 param C {(i,j) in AA, l in O} := 95 + (XC[i] - XC[j])^2 + 8*(YC[i] - YC[j])^2; # Exploitation Cost
 param Y {(i,j) in Ahat}; 
 
-# Flow restrictions
+# Flow restrictions and variables
 node Node_Constraints {i in N, l in O}: net_out = T[i,l];
 arc xl {(i,j) in AA, l in O} >= 0: from Node_Constraints [i,l], to Node_Constraints [j,l];
 
-
 minimize SubProblem_Cost: sum {l in O} (sum {(i,j) in AA} C[i,j,l] * xl[i,j,l]);
 
-subject to Arc_Capacities {(i,j) in Ahat, l in O}:
+subject to Build_To_Use_Constraints {(i,j) in Ahat, l in O}:
     xl[i,j,l] <= RHO * Y[i,j];
 
 
@@ -37,10 +35,11 @@ subject to Arc_Capacities {(i,j) in Ahat, l in O}:
 # Master problem
 # --------------------
 
-param NCuts;  # Number of cuts
-param Cut {(i,j) in Ahat, l in O,k in 1..NCuts};
-param YK {(i,j) in Ahat, k in 1..NCuts}; # Arc constructed in iteration k
+param F {(i,j) in Ahat} := 10 * (abs(XC[i] - XC[j]) + 6 * abs(YC[i] - YC[j])); # Fixed Cost
 
+param NCuts;  # Number of cuts
+param YK {(i,j) in Ahat, k in 1..NCuts}; # Arc constructed in iteration k
+param Cut {(i,j) in Ahat, l in O,k in 1..NCuts} <= 0;
 param U {i in N, l in O, k in 1..NCuts};
 
 var y {(i,j) in Ahat} binary; # Whether arc is built or not
