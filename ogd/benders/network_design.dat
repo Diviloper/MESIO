@@ -68,8 +68,8 @@ param: 	XC 	YC :=
 #right hand side terms of flow constraints
 param T default 0: 3 11 :=
 # Origins
-3 	0	500
-11	500	0
+3 	500	0
+11	0	500
 # Destinations
 5	-50	-50
 8	-50	-50
