@@ -34,7 +34,7 @@ set Ahat :=
 	(22, 23)
 ;
 
-param RHO:= 501;
+param RHO:= 1000;
 
 	 
 # Coordinates of nodes 

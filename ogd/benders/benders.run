@@ -1,31 +1,43 @@
+reset;
+
 model benders.mod;
 data network_design.dat;
 option solver cplex;
 
-# Problem definition
-problem SUBPR: xl,I,caps,zd;
-problem MASTER: zmp3,y,Bcut,ZMP3;
+# Problem definition (Variables, Objective, Constraints)
+problem SUBPR: xl, SubProblem_Cost, Arc_Capacities, Node_Constraints;
+problem MASTER: z, y, Total_Cost, Cuts;
 
 
 # Initializations
-let nCUT := 1;
-let {(i,j) in Ahat} yb[i,j]:=0;  # INIT. VALUES
-let {(i,j) in Ahat} ybk[i,j,1]:=0;  # INIT. VALUES
-                                  
+let NCuts := 1;
+let {(i,j) in Ahat} Y[i,j] := 0;  # INIT. VALUES
+let {(i,j) in Ahat} YK[i,j,1] := 0;  # INIT. VALUES
+                     
 
 # Benders' Iterations
 repeat { 
-   printf "\nIteration %d \n\n", nCUT;
+   printf "\nIteration %d \n\n", NCuts;
    #   RESOLVE SUBPROBLEM
    solve SUBPR;
 
    display SUBPR.result;
       
-   # display xl, zd, I.dual;
+   display SubProblem_Cost, Node_Constraints.dual;
+
+   # display sum{(i,j) in AA} C[i, j, 3] * xl[i, j, 3];
+   # display sum{i in N} T[i, 3] * -Node_Constraints.dual[i, 3];
+
+   # display sum{(i,j) in AA} C[i, j, 11] * xl[i, j, 11];
+   # display sum{i in N} T[i, 11] * -Node_Constraints.dual[i, 11];
+
+   # display C[3, 2, 3] - (Node_Constraints.dual[3, 3] - Node_Constraints.dual[2, 3] + xl.dual[3, 2, 3] - Arc_Capacities.dual[3, 2, 3]);
+   display C[3, 2, 3] - (Node_Constraints.dual[3, 3] - Node_Constraints.dual[2, 3] + xl.dual[3, 2, 3]);
 
 
-   let {(i,j) in Ahat, l in O} restric[i,j,l,nCUT]:= abs(caps.dual[i,j,l]);
-   let {i in N, l in O} u[i,l,nCUT]:= I.dual[i, l];
+   # let {(i,j) in Ahat, l in O} Cut[i, j, l, NCuts]:= Arc_Capacities.dual[i,j,l];
+   let {(i,j) in Ahat, l in O} Cut[i, j, l, NCuts]:= max(0, (Node_Constraints.dual[i, l] - Node_Constraints.dual[j, l]) - C[i, j, l]);
+   let {i in N, l in O} U[i, l, NCuts]:= -Node_Constraints.dual[i, l];
 
 
    # RESOLVE MASTER PROBLEM
@@ -34,11 +46,11 @@ repeat {
    # display y, zmp3;
    display y;
 
-   let nCUT := nCUT + 1;
+   let NCuts := NCuts + 1;
 
-   let {(i,j) in Ahat} yb[i,j] := y[i,j];
-   let {(i,j) in Ahat} ybk[i,j,nCUT] := y[i,j];
+   let {(i,j) in Ahat} Y[i,j] := y[i,j];
+   let {(i,j) in Ahat} YK[i,j,NCuts] := y[i,j];
 
-   if nCUT == 5 then break;
+   if NCuts == 5 then break;
 }
 
