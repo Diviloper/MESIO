@@ -42,8 +42,6 @@ repeat {
 
    display y;
 
-   let master_results[NCuts] := Total_Cost;
-
    let GAP := abs(SubProblem_Cost - Total_Cost);
    display GAP;
 
