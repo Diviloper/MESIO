@@ -1,0 +1,15 @@
+4,5,true,50
+8,9,false,50
+9,4,false,50
+11,8,false,100
+11,12,false,250
+11,22,false,150
+12,13,false,200
+13,14,false,50
+13,17,false,100
+17,18,false,50
+20,21,false,50
+22,20,false,50
+22,23,true,100
+23,24,false,50
+24,19,false,50

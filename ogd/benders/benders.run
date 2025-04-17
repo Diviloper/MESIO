@@ -1,0 +1,51 @@
+# ---------------------------------------------
+# Benders' Decomposition Runner 
+# for the Network Distribution Problem
+# ---------------------------------------------
+
+reset;
+
+model benders.mod;
+data network_design.dat;
+option solver cplex;
+
+# Problem definition (Variables, Objective, Constraints)
+problem SUBPR: xl, SubProblem_Cost, Build_To_Use_Constraints, Node_Constraints;
+problem MASTER: z, y, Total_Cost, Cuts;
+
+
+# Initializations
+let NCuts := 0;
+let {(i,j) in Ahat} Y[i,j] := 0;
+param GAP;
+param epsilon = 1.0e-8;
+
+# Benders' Iterations
+repeat { 
+   printf "\nIteration %d \n\n", NCuts;
+   #   RESOLVE SUBPROBLEM
+   solve SUBPR;
+   display SUBPR.result;
+      
+   display SubProblem_Cost;
+
+   let NCuts := NCuts + 1;
+
+   let {i in N, l in O} U[i, l, NCuts] := -Node_Constraints.dual[i, l];
+   let {(i,j) in Ahat, l in O} Cut[i, j, l, NCuts]:= max(0, U[i, l, NCuts] - U[j, l, NCuts] - C[i, j, l]);
+
+   let {(i, j) in Ahat} YK[i, j, NCuts] := Y[i,j];
+
+   # RESOLVE MASTER PROBLEM
+   solve MASTER;
+   display MASTER.result;
+
+   display y;
+
+   let GAP := abs(SubProblem_Cost - Total_Cost);
+   display GAP;
+
+   if GAP <= epsilon * Total_Cost then break;
+
+   let {(i,j) in Ahat} Y[i,j] := y[i,j];
+}
