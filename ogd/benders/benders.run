@@ -13,7 +13,7 @@ problem MASTER: z, y, Total_Cost, Cuts;
 let NCuts := 0;
 let {(i,j) in Ahat} Y[i,j] := 0;
 param GAP;
-param epsilon = 1.0e-4;
+param epsilon = 1.0e-8;
 
 # Benders' Iterations
 repeat { 
@@ -37,10 +37,12 @@ repeat {
 
    display y;
 
-   let GAP := abs(SubProblem_Cost - z);
+   let master_results[NCuts] := Total_Cost;
+
+   let GAP := abs(SubProblem_Cost - Total_Cost);
    display GAP;
 
-   if GAP <= epsilon * z then break;
+   if GAP <= epsilon * Total_Cost then break;
 
    let {(i,j) in Ahat} Y[i,j] := y[i,j];
 }
