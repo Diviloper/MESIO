@@ -1,3 +1,8 @@
+# ---------------------------------------------
+# Benders' Decomposition Runner 
+# for the Network Distribution Problem
+# ---------------------------------------------
+
 reset;
 
 model benders.mod;
@@ -46,4 +51,3 @@ repeat {
 
    let {(i,j) in Ahat} Y[i,j] := y[i,j];
 }
-
