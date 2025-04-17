@@ -1,6 +1,6 @@
 # Assignments and Stuff for MESIO subjects
 
-## Large-Scale Optimization (OGD - 25/26 Q1)
+## Large-Scale Optimization (OGD - 25/26 Q2)
 
 Assignments:
 
@@ -12,7 +12,7 @@ Assignments:
     - Code: [`ogd/benders/`](./ogd/benders/)
     - Deliverable: [`/ogd/deliverables/OGD - Benders' Decomposition`](./ogd/deliverables/OGD%20-%20Benders'%20Decomposition.pdf)
     
-## Stochastic Programming (PE - 25/26 Q1)
+## Stochastic Programming (PE - 25/26 Q2)
 
 Tasks:
 
