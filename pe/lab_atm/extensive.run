@@ -2,10 +2,9 @@
 # Runner for extensive version of
 # the ATM Money Problem
 # ----------------------------------------
-
 reset;
 
-model atm.extensive.mod;
+model extensive.mod;
 data atm.dat;
 
 option solver cplex;
@@ -13,3 +12,5 @@ option solver cplex;
 solve;
 
 display y, x, Total_Cost;
+
+display _total_solve_time;

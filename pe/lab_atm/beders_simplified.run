@@ -1,0 +1,50 @@
+# ----------------------------------------
+# Runner for bender's decomposition of
+# the ATM Money Problem
+# ----------------------------------------
+reset;
+
+model benders_simplified.mod
+data atm.dat;
+
+option solver cplex;
+
+# Problem declaration (variables, Objective_Function, Restrictions)
+problem Master: x, z, Total_Cost, Cuts;
+problem Sub: u, Dual_Cost, MissingCost;
+
+# Initializations
+let NCuts := 0;
+let X := U;
+let z := C*X;
+
+param GAP default Infinity;
+param epsilon default 1.0e-8;
+
+repeat {
+    printf "-------------------------------------------------------\n";
+    printf "Iteration %d\n", NCuts + 1;
+    printf "-------------------------------------------------------\n";
+
+    printf "Solving Subproblem\n";
+    solve Sub;
+    display Sub.result, Dual_Cost;
+    
+    let NCuts := NCuts + 1;
+    let {i in S} Y[i, NCuts] := u[i];
+
+    let GAP := abs(Dual_Cost - z);
+    display GAP;
+    if GAP <= epsilon * z then break;
+
+    printf "\nSolving Master Problem\n";
+    solve Master;
+
+    display Master.result, x, z, Total_Cost;
+
+    let X := x;
+}
+
+display x, Total_Cost;
+
+display _total_solve_time;
