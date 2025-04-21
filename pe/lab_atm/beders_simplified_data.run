@@ -5,14 +5,14 @@
 
 reset;
 
-model atm.benders.mod
+model benders_simplified.mod
 data atm.dat;
 
 option solver cplex;
-option omit_zero_rows 1;
-option solver_msg 0;
-option cplex_options 'outlev=0 presolve=0';
-option show_boundtol 0;
+# option omit_zero_rows 1;
+# option solver_msg 0;
+# option cplex_options 'outlev=0 presolve=0';
+# option show_boundtol 0;
 
 # Problem declaration
 problem Master: x, z, Total_Cost, Cuts;
@@ -22,11 +22,17 @@ suffix unbdd OUT;
 
 # Initializations
 let NCuts := 0;
-let z := 0;
 let X := U;
+let z := C*X;
 
 param GAP default Infinity;
-param epsilon default 1.0e-5;
+param epsilon default 1.0e-8;
+
+param DUAL_COSTS {1..NCuts};
+param TOTAL_COSTS {1..NCuts};
+param Zs {1..NCuts};
+param Xs {1..NCuts};
+param GAPs{1..NCuts};
 
 repeat {
     printf "-------------------------------------------------------\n";
@@ -36,28 +42,17 @@ repeat {
     printf "Solving Subproblem\n";
     solve Sub > ./tmp.rubbish;
     display Sub.result, Dual_Cost;
+    
 
     let NCuts := NCuts + 1;
-    if Sub.result = "unbounded" then {
-        printf "Subproblem Unbounded -> Adding Ray Cut\n";
+    let {i in S} Y[i, NCuts] := u[i];
 
-        display u.unbdd;
-        let CutType[NCuts] := "ray";
-        let {i in S} Y[i, NCuts] := u[i].unbdd;
-    }
-    else {
-        let GAP := Dual_Cost - z;
-        
-        display GAP;
+    let DUAL_COSTS[NCuts] := Dual_Cost;
 
-        if GAP <= epsilon then break;
-        
-        printf "Subproblem Solved -> Adding Point Cut\n";
-
-
-        let CutType[NCuts] := "point";
-        let {i in S} Y[i, NCuts] := u[i];
-    }
+    let GAP := abs(Dual_Cost - z);
+    let GAPs[NCuts] := GAP;
+    display GAP;
+    if GAP <= epsilon * z then break;
 
     printf "\nSolving Master Problem\n";
     solve Master > ./tmp.rubbish;
@@ -65,6 +60,12 @@ repeat {
     display Master.result, x, z, Total_Cost;
 
     let X := x;
+
+    let TOTAL_COSTS[NCuts] := Total_Cost;
+    let Xs[NCuts] := x;
+    let Zs[NCuts] := z;
 }
 
 display x, Total_Cost;
+
+display DUAL_COSTS, GAPs, TOTAL_COSTS, Zs, Xs;
