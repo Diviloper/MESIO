@@ -67,14 +67,13 @@ function primal_dual_path_following(P::StandardProblem, x⁰::VF, λ⁰::VF, s�
 
     # Initializations
 
+    previous_cost = Inf
     k = 1
     progress = ProgressUnknown(desc="Iterations:")
 
     while true
         Δxᵏ, Δλᵏ, Δsᵏ, μᵏ = compute_direction(step, P, x[k], λ[k], s[k])
-        push!(Δx, Δxᵏ)
-        push!(Δλ, Δλᵏ)
-        push!(Δs, Δsᵏ)
+        push!(Δx, Δxᵏ);push!(Δλ, Δλᵏ);push!(Δs, Δsᵏ)
 
         αᵖ = min(1, ρ * minimum((-x[k]./Δxᵏ)[Δxᵏ.<0]; init=Inf))
         αˢ = min(1, ρ * minimum((-s[k]./Δsᵏ)[Δsᵏ.<0]; init=Inf))
@@ -97,6 +96,8 @@ function primal_dual_path_following(P::StandardProblem, x⁰::VF, λ⁰::VF, s�
         if dual_gap[k] <= ϵᶠ && primal_gap[k] <= ϵᶠ && μ[k] <= ϵᵒ
             break
         end
+
+        previous_cost = c'x[k]
     end
 
     @info "Primal-Dual Path-Following finished after $k iterations with cost $(c'x[k])"
