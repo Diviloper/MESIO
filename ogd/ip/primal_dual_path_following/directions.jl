@@ -75,7 +75,7 @@ function newton_base_system(step::NewtonStep, (; A, b, c)::StandardProblem, x::V
     rˣˢ = X * S * e - σ * μ * e
     R = [-rᶜ; -rᵇ; -rˣˢ]
 
-    Δ = solve(LinearProblem(F, R)).u
+    Δ = lu(F) \ R
 
     return Δ[1:n], Δ[n+1:n+m], Δ[n+m+1:end], μ
 end
@@ -107,7 +107,7 @@ function newton_augmented_system(step::NewtonStep, (; A, b, c)::StandardProblem,
     rˣˢ = X * S * e - σ * μ * e
     R = [-rᶜ + X⁻¹ * rˣˢ; -rᵇ]
 
-    r = solve(LinearProblem(F, R)).u
+    r = lu(F) \ R
 
     Δx = r[1:n]
     Δλ = r[n+1:n+m]
@@ -133,10 +133,10 @@ function newton_normal_system(step::NewtonStep, (; A, b, c)::StandardProblem, x:
     μ = x's / n
 
     # System
-    AΘAᵀ = cholesky!(Symmetric(A * Θ * A'); check=false)
+    AΘAᵀ = cholesky(Symmetric(A * Θ * A'); check=false)
     if !issuccess(AΘAᵀ)
         @warn "Cholesky factorization failed. Adding perturbation"
-        AΘAᵀ = cholesky!(Symmetric(A * Θ * A' + 1e-6 * I); check=false)
+        AΘAᵀ = cholesky(Symmetric(A * Θ * A' + 1e-6 * I); check=false)
     end
 
     rᶜ = A' * λ + s - c
@@ -179,7 +179,7 @@ function newton_permuted_normal_system(step::NewtonStep, (; A, b, c)::StandardPr
     rˣˢ = X * S * e - σ * μ * e
 
     R = -rᵇ + A * Θ * (-rᶜ + X⁻¹ * rˣˢ)
-    Δλ = P' * (cholesky!(LDLᵀ, Val(true)) \ (P * R))
+    Δλ = P' * (cholesky(LDLᵀ, Val(true)) \ (P * R))
     Δs = -rᶜ - A'Δλ
     Δx = -S⁻¹ * (rˣˢ + X * Δs)
 
@@ -206,7 +206,7 @@ function mehrotra_base_system(step::MehrotraStep, (; A, b, c)::StandardProblem, 
 
     # Predictor
 
-    F = lu!(dropzeros!([
+    F = lu(dropzeros!([
         Zⁿ A' I;
         A Zᵐ Zᵐⁿ;
         S Zⁿᵐ X
@@ -260,10 +260,10 @@ function mehrotra_augmented_system(step::MehrotraStep, (; A, b, c)::StandardProb
 
     # System construction
 
-    F = ldlt(Symmetric(dropzeros!([
+    F = lu(dropzeros!([
         Θ A';
         A Zᵐ
-    ])) + 1e-6 * I)
+    ]))
 
     rᶜ = A' * λ + s - c
     rᵇ = A * x - b
@@ -315,10 +315,10 @@ function mehrotra_normal_system(step::MehrotraStep, (; A, b, c)::StandardProblem
     μ = x's / n
 
     # System
-    AΘAᵀ = cholesky!(Symmetric(A * Θ * A'); check=false)
-    if !issuccess(F)
+    AΘAᵀ = cholesky(Symmetric(A * Θ * A'); check=false)
+    if !issuccess(AΘAᵀ)
         @warn "Cholesky factorization failed. Adding perturbation"
-        AΘAᵀ = cholesky!(Symmetric(A * Θ * A') + 1e-6 * I)
+        AΘAᵀ = cholesky(Symmetric(A * Θ * A') + 1e-6 * I)
     end
 
     # Predictor

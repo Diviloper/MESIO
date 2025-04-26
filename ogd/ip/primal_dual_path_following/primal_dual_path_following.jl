@@ -99,6 +99,11 @@ function primal_dual_path_following(P::StandardProblem, x⁰::VF, λ⁰::VF, s�
             break
         end
 
+        if k > 3000
+            @warn "Maximum iterations reached. Stopping."
+            break
+        end
+
         previous_cost = c'x[k]
     end
 
