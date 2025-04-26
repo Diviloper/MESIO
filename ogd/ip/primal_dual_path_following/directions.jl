@@ -1,4 +1,5 @@
 using AMD;
+using LDLFactorizations;
 
 abstract type Step end
 
@@ -131,16 +132,19 @@ function newton_normal_system(step::NewtonStep, (; A, b, c)::StandardProblem, x:
 
     μ = x's / n
 
-    # System construction
-
-    AΘAᵀ = A * Θ * A'
+    # System
+    AΘAᵀ = cholesky!(Symmetric(A * Θ * A'); check=false)
+    if !issuccess(AΘAᵀ)
+        @warn "Cholesky factorization failed. Adding perturbation"
+        AΘAᵀ = cholesky!(Symmetric(A * Θ * A' + 1e-6 * I); check=false)
+    end
 
     rᶜ = A' * λ + s - c
     rᵇ = A * x - b
     rˣˢ = X * S * e - σ * μ * e
-
     R = -rᵇ + A * (-Θ*rᶜ + S⁻¹ * rˣˢ)
-    Δλ = solve(LinearProblem(AΘAᵀ, R)).u
+
+    Δλ = AΘAᵀ \ R
     Δs = -rᶜ - A'Δλ
     Δx = -S⁻¹ * (rˣˢ + X * Δs)
 
@@ -202,18 +206,18 @@ function mehrotra_base_system(step::MehrotraStep, (; A, b, c)::StandardProblem, 
 
     # Predictor
 
-    F = dropzeros!([
+    F = lu!(dropzeros!([
         Zⁿ A' I;
         A Zᵐ Zᵐⁿ;
         S Zⁿᵐ X
-    ])
+    ]))
 
     rᶜ = A' * λ + s - c
     rᵇ = A * x - b
     rˣˢ = X * S * e
     P = [-rᶜ; -rᵇ; -rˣˢ]
 
-    Δᵃ = solve(LinearProblem(F, P)).u
+    Δᵃ = F \ P
 
     Δxᵃ = Δᵃ[1:n]
     Δsᵃ = Δᵃ[n+m+1:end]
@@ -232,7 +236,7 @@ function mehrotra_base_system(step::MehrotraStep, (; A, b, c)::StandardProblem, 
     end
     C = [zeros(n); zeros(m); c]
 
-    Δᶜ = solve(LinearProblem(F, C)).u
+    Δᶜ = F \ C
 
     Δ = Δᵃ + Δᶜ
 
@@ -256,17 +260,17 @@ function mehrotra_augmented_system(step::MehrotraStep, (; A, b, c)::StandardProb
 
     # System construction
 
-    F = dropzeros!([
+    F = ldlt(Symmetric(dropzeros!([
         Θ A';
         A Zᵐ
-    ])
+    ])) + 1e-6 * I)
 
     rᶜ = A' * λ + s - c
     rᵇ = A * x - b
     rˣˢ = X * S * e
     P = [-rᶜ + X⁻¹ * rˣˢ; -rᵇ]
 
-    Δᵃ = solve(LinearProblem(F, P)).u
+    Δᵃ = F \ P
 
     Δxᵃ = Δᵃ[1:n]
     Δλᵃ = Δᵃ[n+1:n+m]
@@ -279,15 +283,18 @@ function mehrotra_augmented_system(step::MehrotraStep, (; A, b, c)::StandardProb
     σ = (μᵃ / μ)^3
 
     # Centering + Corrector 
-
-    c = -μ * σ * e + Δxᵃ .* Δsᵃ
+    if μ > 10
+        c = -σ * μ * e + αdᵃ * Δxᵃ .* Δsᵃ
+    else
+        c = -σ * μ * e + Δxᵃ .* Δsᵃ
+    end
     C = [X⁻¹ * c; zeros(m)]
 
-    Δᶜ = solve(LinearProblem(F, C)).u
+    Δᶜ = F \ C
 
     Δxᶜ = Δᶜ[1:n]
     Δλᶜ = Δᶜ[n+1:n+m]
-    Δsᶜ = X⁻¹ * (c - S * Δxᶜ)
+    Δsᶜ = -A'Δλᶜ
 
     return Δxᵃ + Δxᶜ, Δλᵃ + Δλᶜ, Δsᵃ + Δsᶜ, μ
 end
@@ -307,51 +314,39 @@ function mehrotra_normal_system(step::MehrotraStep, (; A, b, c)::StandardProblem
 
     μ = x's / n
 
-    # System construction
-
-    AΘAᵀ = Symmetric(A * Θ * A')
+    # System
+    AΘAᵀ = cholesky!(Symmetric(A * Θ * A'); check=false)
+    if !issuccess(F)
+        @warn "Cholesky factorization failed. Adding perturbation"
+        AΘAᵀ = cholesky!(Symmetric(A * Θ * A') + 1e-6 * I)
+    end
 
     # Predictor
-
     rᶜ = A' * λ + s - c
     rᵇ = A * x - b
     rˣˢ = X * S * e
-
     R = -rᵇ + A * (-Θ*rᶜ + S⁻¹*rˣˢ)
-    F = ldlt(AΘAᵀ; check=false)
-    if !issuccess(F)
-        @warn "LDLᵀ factorization failed. Adding perturbation"
-        F = ldlt(AΘAᵀ; shift=1e-6)
-    end
     
-    Δλᵃ = F \ R
+    Δλᵃ = AΘAᵀ \ R
     Δsᵃ = -rᶜ - A'Δλᵃ
     Δxᵃ = -S⁻¹ * (rˣˢ + X * Δsᵃ)
-
-    αpᵃ = min(1, minimum(-(x ./ Δxᵃ)[Δxᵃ .< -1e10]; init=Inf))
-    αdᵃ = min(1, minimum(-(s ./ Δsᵃ)[Δsᵃ .< -1e10]; init=Inf))
+    
+    αpᵃ = min(1, minimum((-x ./ Δxᵃ)[Δxᵃ .< -1e-10]; init=Inf))
+    αdᵃ = min(1, minimum((-s ./ Δsᵃ)[Δsᵃ .< -1e-10]; init=Inf))
     μᵃ = ((x + αpᵃ * Δxᵃ)' * (s + αdᵃ * Δsᵃ)) / n
     σ = (μᵃ / μ)^3
 
     # Centering + Corrector
-
     if μ > 10
         c = -σ * μ * e + αdᵃ * Δxᵃ .* Δsᵃ
     else
         c = -σ * μ * e + Δxᵃ .* Δsᵃ
     end
     C = A * S⁻¹ * c
-    Δλᶜ = F \ C
+
+    Δλᶜ = AΘAᵀ \ C
     Δsᶜ = -A'Δλᶜ
     Δxᶜ = -S⁻¹ * (c + X * Δsᶜ)
 
     return Δxᵃ + Δxᶜ, Δλᵃ + Δλᶜ, Δsᵃ + Δsᶜ, μ
-end
-
-function mehrotra_σ(x::VF, Δxᵃ::VF, s::VF, Δsᵃ::VF, n::Int, μ::Float64)::Float64
-    αpᵃ = min(1, minimum((-x ./ Δxᵃ)[Δxᵃ .< -1e10]; init=Inf))
-    αdᵃ = min(1, minimum((-s ./ Δsᵃ)[Δsᵃ .< -1e10]; init=Inf))
-    μᵃ = ((x + αpᵃ * Δxᵃ)' * (s + αdᵃ * Δsᵃ)) / n
-    σ = (μᵃ / μ)^3
-    return σ
 end

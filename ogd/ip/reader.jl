@@ -1,4 +1,4 @@
-using MAT
+using MAT, DataFrames
 
 function read_from_mat_file(path::String)::ExtendedProblem
     vars = matread(path)["Problem"]

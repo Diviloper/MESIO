@@ -78,7 +78,7 @@ function primal_dual_path_following(P::StandardProblem, x⁰::VF, λ⁰::VF, s�
         αᵖ = min(1, ρ * minimum((-x[k]./Δxᵏ)[Δxᵏ .< 0]; init=Inf))
         αˢ = min(1, ρ * minimum((-s[k]./Δsᵏ)[Δsᵏ .< 0]; init=Inf))
 
-        @info αᵖ, αˢ
+        # @info αᵖ, αˢ
 
         push!(x, x[k] + αᵖ * Δxᵏ)
         push!(λ, λ[k] + αˢ * Δλᵏ)
