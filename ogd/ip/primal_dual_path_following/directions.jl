@@ -12,14 +12,14 @@ end
 struct NewtonStep <: Step
     σ::Float64
     system::System
-    matrix::SparseMatrixCSC
 end
-NewtonStep(σ::Float64, system::System) = NewtonStep(σ, system, sparse([]))
-NewtonStep(σ::Float64) = NewtonStep(σ, normal, sparse([]))
-NewtonStep() = NewtonStep(0.1, normal, sparse([]))
+NewtonStep(σ::Float64) = NewtonStep(σ, normal)
+NewtonStep() = NewtonStep(0.1, normal)
 
 struct MehrotraStep <: Step
+    system::System
 end
+MehrotraStep() = MehrotraStep(normal)
 
 function compute_direction(step::NewtonStep, P::StandardProblem, x::VF, λ::VF, s::VF)::Tuple{VF,VF,VF,Float64}
     if step.system == base
@@ -33,12 +33,12 @@ function compute_direction(step::NewtonStep, P::StandardProblem, x::VF, λ::VF, 
     end
 end
 
-function compute_direction(step::MehrotraStep, P::StandardProblem, x::SMF, s::SMF)::Tuple{VF,VF,VF,Float64}
+function compute_direction(step::MehrotraStep, P::StandardProblem, x::VF, λ::VF, s::VF)::Tuple{VF,VF,VF,Float64}
     if step.system == base
         return mehrotra_base_system(step, P, x, λ, s)
     elseif step.system == augmented
         return mehrotra_augmented_system(step, P, x, λ, s)
-    elseif step.system == normal
+    else
         return mehrotra_normal_system(step, P, x, λ, s)
     end
 end
@@ -54,19 +54,19 @@ function newton_base_system(step::NewtonStep, (; A, b, c)::StandardProblem, x::V
     e = ones(n)
     I = spdiagm(e)
 
-    Zᵐ = sparse([m], [m], [0])
-    Zᵐⁿ = sparse([m], [n], [0])
-    Zⁿᵐ = sparse([n], [m], [0])
-    Zⁿ = sparse([n], [n], [0])
+    Zᵐ = spzeros(m, m)
+    Zᵐⁿ = spzeros(m, n)
+    Zⁿᵐ = spzeros(n, m)
+    Zⁿ = spzeros(n, n)
 
     μ = x's / n
 
     # System construction
 
     F = dropzeros!([
-        Zⁿ  A'  I  ;
-        A   Zᵐ  Zᵐⁿ;
-        S   Zⁿᵐ X
+        Zⁿ A' I;
+        A Zᵐ Zᵐⁿ;
+        S Zⁿᵐ X
     ])
 
     rᶜ = A' * λ + s - c
@@ -87,33 +87,30 @@ function newton_augmented_system(step::NewtonStep, (; A, b, c)::StandardProblem,
     X = spdiagm(x)
     X⁻¹ = spdiagm(1 ./ x)
     S = spdiagm(s)
-    Θ = -spdiagm(s./x) # -(X*S⁻¹)⁻¹,  Makes matrix below prettier :)
+    Θ = -spdiagm(s ./ x) # -(X*S⁻¹)⁻¹,  Makes matrix below prettier :)
 
     e = ones(n)
-    Zᵐ = sparse([m], [m], [0])
+    Zᵐ = spzeros(m, m)
 
     μ = x's / n
 
     # System construction
 
     F = dropzeros!([
-        Θ  A' ;
-        A  Zᵐ ;
+        Θ A';
+        A Zᵐ
     ])
-
-    F = F + 1e-6 * spdiagm(ones(m + n))
 
     rᶜ = A' * λ + s - c
     rᵇ = A * x - b
     rˣˢ = X * S * e - σ * μ * e
-    R = [-rᶜ + X⁻¹*rˣˢ; -rᵇ]
+    R = [-rᶜ + X⁻¹ * rˣˢ; -rᵇ]
 
     r = solve(LinearProblem(F, R)).u
-    @assert F * r ≈ R
 
     Δx = r[1:n]
     Δλ = r[n+1:n+m]
-    Δs = -X⁻¹*(rˣˢ + S*Δx)
+    Δs = -X⁻¹ * (rˣˢ + S * Δx)
 
     return Δx, Δλ, Δs, μ
 end
@@ -128,7 +125,7 @@ function newton_normal_system(step::NewtonStep, (; A, b, c)::StandardProblem, x:
     S = spdiagm(s)
     S⁻¹ = spdiagm(1 ./ s)
 
-    Θ = X*S⁻¹
+    Θ = X * S⁻¹
 
     e = ones(n)
 
@@ -142,11 +139,10 @@ function newton_normal_system(step::NewtonStep, (; A, b, c)::StandardProblem, x:
     rᵇ = A * x - b
     rˣˢ = X * S * e - σ * μ * e
 
-    R = -rᵇ + A * Θ * (-rᶜ + X⁻¹ * rˣˢ)
+    R = -rᵇ + A * (-Θ*rᶜ + S⁻¹ * rˣˢ)
     Δλ = solve(LinearProblem(AΘAᵀ, R)).u
-    @assert AΘAᵀ * Δλ == R
     Δs = -rᶜ - A'Δλ
-    Δx = -S⁻¹ * (rˣˢ + X*Δs)
+    Δx = -S⁻¹ * (rˣˢ + X * Δs)
 
     return Δx, Δλ, Δs, μ
 end
@@ -161,7 +157,7 @@ function newton_permuted_normal_system(step::NewtonStep, (; A, b, c)::StandardPr
     S = spdiagm(s)
     S⁻¹ = spdiagm(1 ./ s)
 
-    Θ = X*S⁻¹
+    Θ = X * S⁻¹
 
     e = ones(n)
 
@@ -173,16 +169,189 @@ function newton_permuted_normal_system(step::NewtonStep, (; A, b, c)::StandardPr
     perm = symamd(AΘAᵀ)
     P = sparse(collect(1:m), perm, ones(size(perm, 1)))
     LDLᵀ = Symmetric(P * AΘAᵀ * P')
-    
+
     rᶜ = A' * λ + s - c
     rᵇ = A * x - b
     rˣˢ = X * S * e - σ * μ * e
 
     R = -rᵇ + A * Θ * (-rᶜ + X⁻¹ * rˣˢ)
-    Δλ = P' * (cholesky!(LDLᵀ) \ (P * R))
-    @assert AΘAᵀ * Δλ == R
+    Δλ = P' * (cholesky!(LDLᵀ, Val(true)) \ (P * R))
     Δs = -rᶜ - A'Δλ
-    Δx = -S⁻¹ * (rˣˢ + X*Δs)
+    Δx = -S⁻¹ * (rˣˢ + X * Δs)
 
     return Δx, Δλ, Δs, μ
+end
+
+
+function mehrotra_base_system(step::MehrotraStep, (; A, b, c)::StandardProblem, x::VF, λ::VF, s::VF)::Tuple{VF,VF,VF,Float64}
+    # Vars
+    (m, n) = size(A)
+
+    X = spdiagm(x)
+    S = spdiagm(s)
+
+    e = ones(n)
+    I = spdiagm(e)
+
+    Zᵐ = spzeros(m, m)
+    Zᵐⁿ = spzeros(m, n)
+    Zⁿᵐ = spzeros(n, m)
+    Zⁿ = spzeros(n, n)
+
+    μ = x's / n
+
+    # Predictor
+
+    F = dropzeros!([
+        Zⁿ A' I;
+        A Zᵐ Zᵐⁿ;
+        S Zⁿᵐ X
+    ])
+
+    rᶜ = A' * λ + s - c
+    rᵇ = A * x - b
+    rˣˢ = X * S * e
+    P = [-rᶜ; -rᵇ; -rˣˢ]
+
+    Δᵃ = solve(LinearProblem(F, P)).u
+
+    Δxᵃ = Δᵃ[1:n]
+    Δsᵃ = Δᵃ[n+m+1:end]
+    
+    αpᵃ = min(1, minimum((-x ./ Δxᵃ)[Δxᵃ .< 0]; init=Inf))
+    αdᵃ = min(1, minimum((-s ./ Δsᵃ)[Δsᵃ .< 0]; init=Inf))
+    μᵃ = ((x + αpᵃ * Δxᵃ)' * (s + αdᵃ * Δsᵃ)) / n
+    σ = (μᵃ / μ)^3
+
+    # Centering + Corrector 
+
+    if μ > 10
+        c = μ * σ * e - αdᵃ * Δxᵃ .* Δsᵃ
+    else
+        c = μ * σ * e - Δxᵃ .* Δsᵃ
+    end
+    C = [zeros(n); zeros(m); c]
+
+    Δᶜ = solve(LinearProblem(F, C)).u
+
+    Δ = Δᵃ + Δᶜ
+
+    return Δ[1:n], Δ[n+1:n+m], Δ[n+m+1:end], μ
+end
+
+
+function mehrotra_augmented_system(step::MehrotraStep, (; A, b, c)::StandardProblem, x::VF, λ::VF, s::VF)::Tuple{VF,VF,VF,Float64}
+    # Vars
+    (m, n) = size(A)
+
+    X = spdiagm(x)
+    X⁻¹ = spdiagm(1 ./ x)
+    S = spdiagm(s)
+    Θ = -spdiagm(s ./ x) # -(X*S⁻¹)⁻¹,  Makes matrix below prettier :)
+
+    e = ones(n)
+    Zᵐ = spzeros(m, m)
+
+    μ = x's / n
+
+    # System construction
+
+    F = dropzeros!([
+        Θ A';
+        A Zᵐ
+    ])
+
+    rᶜ = A' * λ + s - c
+    rᵇ = A * x - b
+    rˣˢ = X * S * e
+    P = [-rᶜ + X⁻¹ * rˣˢ; -rᵇ]
+
+    Δᵃ = solve(LinearProblem(F, P)).u
+
+    Δxᵃ = Δᵃ[1:n]
+    Δλᵃ = Δᵃ[n+1:n+m]
+    Δsᵃ = -X⁻¹ * (rˣˢ + S * Δxᵃ)
+
+    αpᵃ = min(1, minimum((-x./Δxᵃ)[Δxᵃ.<0]; init=Inf))
+    αdᵃ = min(1, minimum((-s./Δsᵃ)[Δsᵃ.<0]; init=Inf))
+
+    μᵃ = ((x + αpᵃ * Δxᵃ)' * (s + αdᵃ * Δsᵃ)) / n
+    σ = (μᵃ / μ)^3
+
+    # Centering + Corrector 
+
+    c = -μ * σ * e + Δxᵃ .* Δsᵃ
+    C = [X⁻¹ * c; zeros(m)]
+
+    Δᶜ = solve(LinearProblem(F, C)).u
+
+    Δxᶜ = Δᶜ[1:n]
+    Δλᶜ = Δᶜ[n+1:n+m]
+    Δsᶜ = X⁻¹ * (c - S * Δxᶜ)
+
+    return Δxᵃ + Δxᶜ, Δλᵃ + Δλᶜ, Δsᵃ + Δsᶜ, μ
+end
+
+
+function mehrotra_normal_system(step::MehrotraStep, (; A, b, c)::StandardProblem, x::VF, λ::VF, s::VF)::Tuple{VF,VF,VF,Float64}
+    # Vars
+    (m, n) = size(A)
+
+    X = spdiagm(x)
+    S = spdiagm(s)
+    S⁻¹ = spdiagm(1 ./ s)
+
+    Θ = X * S⁻¹
+
+    e = ones(n)
+
+    μ = x's / n
+
+    # System construction
+
+    AΘAᵀ = Symmetric(A * Θ * A')
+
+    # Predictor
+
+    rᶜ = A' * λ + s - c
+    rᵇ = A * x - b
+    rˣˢ = X * S * e
+
+    R = -rᵇ + A * (-Θ*rᶜ + S⁻¹*rˣˢ)
+    F = ldlt(AΘAᵀ; check=false)
+    if !issuccess(F)
+        @warn "LDLᵀ factorization failed. Adding perturbation"
+        F = ldlt(AΘAᵀ; shift=1e-6)
+    end
+    
+    Δλᵃ = F \ R
+    Δsᵃ = -rᶜ - A'Δλᵃ
+    Δxᵃ = -S⁻¹ * (rˣˢ + X * Δsᵃ)
+
+    αpᵃ = min(1, minimum(-(x ./ Δxᵃ)[Δxᵃ .< -1e10]; init=Inf))
+    αdᵃ = min(1, minimum(-(s ./ Δsᵃ)[Δsᵃ .< -1e10]; init=Inf))
+    μᵃ = ((x + αpᵃ * Δxᵃ)' * (s + αdᵃ * Δsᵃ)) / n
+    σ = (μᵃ / μ)^3
+
+    # Centering + Corrector
+
+    if μ > 10
+        c = -σ * μ * e + αdᵃ * Δxᵃ .* Δsᵃ
+    else
+        c = -σ * μ * e + Δxᵃ .* Δsᵃ
+    end
+    C = A * S⁻¹ * c
+    Δλᶜ = F \ C
+    Δsᶜ = -A'Δλᶜ
+    Δxᶜ = -S⁻¹ * (c + X * Δsᶜ)
+
+    return Δxᵃ + Δxᶜ, Δλᵃ + Δλᶜ, Δsᵃ + Δsᶜ, μ
+end
+
+function mehrotra_σ(x::VF, Δxᵃ::VF, s::VF, Δsᵃ::VF, n::Int, μ::Float64)::Float64
+    αpᵃ = min(1, minimum((-x ./ Δxᵃ)[Δxᵃ .< -1e10]; init=Inf))
+    αdᵃ = min(1, minimum((-s ./ Δsᵃ)[Δsᵃ .< -1e10]; init=Inf))
+    μᵃ = ((x + αpᵃ * Δxᵃ)' * (s + αdᵃ * Δsᵃ)) / n
+    σ = (μᵃ / μ)^3
+    return σ
 end

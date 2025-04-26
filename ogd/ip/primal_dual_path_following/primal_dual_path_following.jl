@@ -75,8 +75,10 @@ function primal_dual_path_following(P::StandardProblem, x⁰::VF, λ⁰::VF, s�
         Δxᵏ, Δλᵏ, Δsᵏ, μᵏ = compute_direction(step, P, x[k], λ[k], s[k])
         push!(Δx, Δxᵏ);push!(Δλ, Δλᵏ);push!(Δs, Δsᵏ)
 
-        αᵖ = min(1, ρ * minimum((-x[k]./Δxᵏ)[Δxᵏ.<0]; init=Inf))
-        αˢ = min(1, ρ * minimum((-s[k]./Δsᵏ)[Δsᵏ.<0]; init=Inf))
+        αᵖ = min(1, ρ * minimum((-x[k]./Δxᵏ)[Δxᵏ .< 0]; init=Inf))
+        αˢ = min(1, ρ * minimum((-s[k]./Δsᵏ)[Δsᵏ .< 0]; init=Inf))
+
+        @info αᵖ, αˢ
 
         push!(x, x[k] + αᵖ * Δxᵏ)
         push!(λ, λ[k] + αˢ * Δλᵏ)
@@ -87,7 +89,7 @@ function primal_dual_path_following(P::StandardProblem, x⁰::VF, λ⁰::VF, s�
         push!(rᶜ, A' * λ[k] + s[k] - c)
         push!(rᵇ, A * x[k] - b)
 
-        push!(dual_gap, gap(b, rᶜ[k]))
+        push!(dual_gap, gap(c, rᶜ[k]))
         push!(primal_gap, gap(b, rᵇ[k]))
         push!(μ, μᵏ)
 
