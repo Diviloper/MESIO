@@ -1,0 +1,21 @@
+model cuttingOGEm.mod;
+data cuttingOGEm.dat;
+#data caps.dat;
+option solver cplexamp; # change appropriately if necessary
+
+
+problem MP: z,mu0,cuts,Z; # check and compete if necessary
+
+problem w_aval: xl,xx,I,art,total_flow,caps,w; # check and complete if necessary
+
+param jj default 1;
+param nCUT0 default 1;
+
+for {1..nCUT0}{
+    let YY[jj]:= 0; # enables the jj-th constraint.
+     # COMPLETE
+
+    let jj:=jj+1;
+}
+
+
