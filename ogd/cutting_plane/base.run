@@ -1,0 +1,27 @@
+# ---------------------------------------------------
+# Runner for the Multicommodity Network Flow Problem
+# ---------------------------------------------------
+
+reset;
+
+model base.mod;
+data base.dat;
+data caps.dat;
+
+option solver cplex;
+
+
+problem Unconstrained: 
+    xl,    # Variables
+    Cost,  # Objective Function
+    I      # Restrictions
+    ;
+
+solve Unconstrained;
+
+param XL;
+for {(i, j) in A}{
+    let XL := sum{l in O} xl[i, j, l];
+    if XL == 0 then continue;
+    printf "%d %d %6.2f \n", i, j, XL >> flows.dat;
+    }
