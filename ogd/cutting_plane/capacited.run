@@ -1,0 +1,21 @@
+# ---------------------------------------------------
+# Runner for the Multicommodity Network Flow Problem
+# ---------------------------------------------------
+
+reset;
+
+model base.mod;
+data base.dat;
+data caps.dat;
+
+option solver cplex;
+
+
+problem Capacited: 
+    xl,    # Variables
+    Cost,  # Objective Function
+    I,     # Restrictions
+    JointCapacity
+    ;
+
+solve Capacited;
