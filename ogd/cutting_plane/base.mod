@@ -27,7 +27,7 @@ arc xl {(i, j) in A, l in O} >= 0:             # Arc Flow
 # Model
 
 # Objective Function
-minimize Cost: sum {l in O} (sum {(i, j) in A} C[i, j, l] * xl[i, j, l]);
+minimize Cost: sum {l in O, (i, j) in A} C[i, j, l] * xl[i, j, l];
 
 # Restrictions
 
