@@ -19,3 +19,17 @@ problem Capacited:
     ;
 
 solve Capacited;
+
+param XL;
+for {(i, j) in A} {
+    let XL := sum{l in O} xl[i, j, l];
+    if XL == 0 then continue;
+    printf "%d %d %6.2f \n", i, j, XL >> total_flows_capacited.dat;
+}
+
+for {l in O} {
+    for {(i, j) in A} {
+        if xl[i, j, l] == 0 then continue;
+        printf "%d %d %d %6.2f \n", i, j, l, xl[i, j, l] >> flows_capacited.dat;
+    }
+}
