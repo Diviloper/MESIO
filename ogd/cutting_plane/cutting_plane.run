@@ -26,23 +26,27 @@ let {f in FN, o in O} AFO[f, o, NCUTS] := T[o, o];
 let {f in FN, n in N, o in O} AFD[f, n, o, NCUTS] := -T[n, o];
 
 param MUA;
-param VARIANT within {1..3} := 3;
+param VARIANT within {1..3} := 2;
 
 
 for {1..MAXCUTS}{
-    let YY[NCUTS] := 0; # enables the NCUTS-th constraint.
+    printf "Master Problem Iteration %i\n", NCUTS;
     solve MasterProblem;
-    
+    display MasterProblem.result;
+    display z > "master.txt";
 
-    if VARIANT = 1 then let {(i, j) in A} MU[i, j] := mu[i, j];
+    if VARIANT = 1 || NCUTS = 1 then let {(i, j) in A} MU[i, j] := mu[i, j];
     else {
-        if VARIANT = 2 then let MUA := 1 / (NCUTS + 1);
+        if VARIANT = 2 then let MUA := 1 / (NCUTS);
         else let MUA := NCUTS^2 / sum{k in 1..NCUTS} k^2;
+        printf "MUA = %f\n", MUA;
         
-        let {(i, j) in A} MU[i, j] := mu[i, j] + MUA * abs(mu[i, j] - MU[i, j]);
+        let {(i, j) in A} MU[i, j] := MU[i, j] + MUA * (mu[i, j] - MU[i, j]);
     }
-
+    printf "Sub Problem Iteration %i\n", NCUTS;
     solve SubProblem;
+    display SubProblem.result;
+    display w > "subproblem.txt";
 
     let NCUTS := NCUTS + 1;
 

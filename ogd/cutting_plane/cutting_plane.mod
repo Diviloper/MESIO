@@ -42,16 +42,15 @@ arc afd {o in FN, i in N, l in O} >= 0:  # Flow of articial arcs (to destination
 
 minimize w: 
     sum {(i, j) in A} C[i, j] * tf[i, j] +
-    sum {(i, j) in A} MU[i, j] * (tf[i, j] - Y[i,j ]) +
+    sum {(i, j) in A} MU[i, j] * (tf[i, j] - Y[i, j]) +
     BIGM * sum {o in FN, l in O} afo[o, l] +
-    BIGM * sum {o in FN, i in N, l in O} afd[o,i,l];
+    BIGM * sum {o in FN, i in N, l in O} afd[o, i, l];
 
-subject to total_flow {(i,j) in A}: tf[i,j] = sum{l in O} flow[i,j,l];
-subject to caps {(i,j) in A}: tf[i,j]<=Y[i,j];
+subject to total_flow {(i, j) in A}: tf[i, j] = sum {l in O} flow[i, j, l];
+subject to caps {(i, j) in A}: tf[i, j] <= Y[i, j];
 
 # Master Problem
 param NCUTS;                                 # Number of Cuts
-param YY {1..NCUTS} default MC;              # Cut switch
 param FLOW {A, {1..NCUTS}} default 0;        # Flows of cut n
 param AFO {FN, O, {1..NCUTS}} default 0;     # Artificial flows of cut n (from origins)
 param AFD {FN, N, O, {1..NCUTS}} default 0;  # Artificial flows of cut n (to destinations)
@@ -65,7 +64,4 @@ subject to cuts{k in {1..NCUTS}}: z <=
     sum {(i, j) in A} C[i, j] * FLOW[i, j, k] +
     sum {(i, j) in A} mu[i, j] * (FLOW[i, j, k] - Y[i, j]) +
     BIGM * sum {o in FN, l in O} AFO[o, l, k] +
-    BIGM * sum {o in FN, i in N, l in O} AFD[o, i, l, k] +
-    MC * YY[k];
-
-
+    BIGM * sum {o in FN, i in N, l in O} AFD[o, i, l, k];

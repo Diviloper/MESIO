@@ -20,8 +20,8 @@ problem Unconstrained:
 solve Unconstrained;
 
 param XL;
-for {(i, j) in A}{
+for {(i, j) in A} {
     let XL := sum{l in O} xl[i, j, l];
     if XL == 0 then continue;
     printf "%d %d %6.2f \n", i, j, XL >> flows.dat;
-    }
+}
