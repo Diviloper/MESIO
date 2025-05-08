@@ -29,39 +29,40 @@ param MU {(i, j) in A}       # Lagrange Multipliers
 var tf {A};                  # Total Flow
 node I {i in N, l in O}:     # Real nodes
     net_out = T[i, l];
-node AI {o in FN, l in O}:   # Artificial nodes
+node AI {f in FN, l in O}:   # Artificial nodes
     net_out = 0;
 
 arc flow {(i, j) in A, l in O} >= 0:     # Flow of normal arcs
     from I [i, l], to I [j, l];
-arc afo {o in FN, l in O} >= 0:          # Flow of articial arcs (from origins)
-    from I [l, l], to AI [o, l];
-arc afd {o in FN, i in N, l in O} >= 0:  # Flow of articial arcs (to destinations)
-    from AI [o, l], to I [i, l];
+arc afo {f in FN, l in O} >= 0:          # Flow of articial arcs (from origins)
+    from I [l, l], to AI [f, l];
+arc afd {f in FN, i in N, l in O} >= 0:  # Flow of articial arcs (to destinations)
+    from AI [f, l], to I [i, l];
 
 
 minimize w: 
     sum {(i, j) in A} C[i, j] * tf[i, j] +
     sum {(i, j) in A} MU[i, j] * (tf[i, j] - Y[i, j]) +
-    BIGM * sum {o in FN, l in O} afo[o, l] +
-    BIGM * sum {o in FN, i in N, l in O} afd[o, i, l];
+    BIGM * sum {f in FN, l in O} afo[f, l] +
+    BIGM * sum {f in FN, i in N, l in O} afd[f, i, l];
 
 subject to total_flow {(i, j) in A}: tf[i, j] = sum {l in O} flow[i, j, l];
-subject to caps {(i, j) in A}: tf[i, j] <= Y[i, j];
+# subject to caps {(i, j) in A}: tf[i, j] <= Y[i, j];
 
 # Master Problem
-param NCUTS;                                 # Number of Cuts
-param FLOW {A, {1..NCUTS}} default 0;        # Flows of cut n
-param AFO {FN, O, {1..NCUTS}} default 0;     # Artificial flows of cut n (from origins)
-param AFD {FN, N, O, {1..NCUTS}} default 0;  # Artificial flows of cut n (to destinations)
+param NCUTS;                          # Number of Cuts
+set CUTS = {1..NCUTS};                # Cut Set
+param FLOW {A, CUTS} default 0;       # Flows of cut n
+param AFO {FN, O, CUTS} default 0;    # Artificial flows of cut n (from origins)
+param AFD {FN, N, O, CUTS} default 0; # Artificial flows of cut n (to nodes)
 
 var z;
 var mu {A} >= 0;
 
 maximize Z: z;
 
-subject to cuts{k in {1..NCUTS}}: z <= 
+subject to cuts {k in CUTS}: z <= 
     sum {(i, j) in A} C[i, j] * FLOW[i, j, k] +
     sum {(i, j) in A} mu[i, j] * (FLOW[i, j, k] - Y[i, j]) +
-    BIGM * sum {o in FN, l in O} AFO[o, l, k] +
-    BIGM * sum {o in FN, i in N, l in O} AFD[o, i, l, k];
+    BIGM * sum {f in FN, l in O} AFO[f, l, k] +
+    BIGM * sum {f in FN, i in N, l in O} AFD[f, i, l, k];

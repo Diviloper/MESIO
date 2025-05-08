@@ -23,12 +23,14 @@ param XL;
 for {(i, j) in A} {
     let XL := sum{l in O} xl[i, j, l];
     if XL == 0 then continue;
-    printf "%d %d %6.2f \n", i, j, XL >> total_flows.dat;
+    printf "%d,%d,%.0f\n", i, j, XL >> data/unconstrained/total_flows.csv;
 }
 
 for {l in O} {
     for {(i, j) in A} {
         if xl[i, j, l] == 0 then continue;
-        printf "%d %d %d %6.2f \n", i, j, l, xl[i, j, l] >> flows.dat;
+        let XL := sum {l2 in O} xl[i, j, l2];
+        if xl[i, j, l] = XL then printf "%d,%d,%d,%.0f\n", i, j, l, xl[i, j, l] >> data/unconstrained/flows.csv;
+        else printf "%d,%d,%d,%.0f (%.0f)\n", i, j, l, xl[i, j, l], XL >> data/unconstrained/flows.csv;
     }
 }
