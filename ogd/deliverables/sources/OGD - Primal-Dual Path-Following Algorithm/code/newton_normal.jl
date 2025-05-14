@@ -3,8 +3,8 @@ function newton_normal_system(
 )::Tuple{VF,VF,VF,Float64}
     # Vars
     (m, n) = size(A); (; σ) = step
-    X = spdiagm(x); X⁻¹ = spdiagm(1./x)
-    S = spdiagm(s); S⁻¹ = spdiagm(1./s)
+    X = spdiagm(x); X⁻¹ = spdiagm(1 ./ x)
+    S = spdiagm(s); S⁻¹ = spdiagm(1 ./ s)
     Θ = X * S⁻¹; e = ones(n)
     μ = x's / n
 

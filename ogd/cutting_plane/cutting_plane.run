@@ -1,0 +1,130 @@
+
+reset;
+
+model cutting_plane.mod;
+data cutting_plane.dat;
+data caps.dat;
+option solver cplex;
+
+
+problem MasterProblem: 
+    z, mu,                    # Variables
+    cuts,                     # Restrictions
+    Z;                        # Objective Function
+
+problem SubProblem: 
+    flow, tf, afo, afd,       # Variables
+    I, AI, total_flow, # Restrictions
+    w;                        # Objective Function
+
+let NCUTS := 1;
+param epsilon = 1.0e-6;
+
+# Generate Initial solution
+let {f in FN, o in O} AFO[f, o, NCUTS] := T[o, o];
+let {f in FN, n in N, o in O} AFD[f, n, o, NCUTS] := -T[n, o];
+
+param MUA;
+param VARIANT within {1..3} := 2;
+
+param FEASIBLE symbolic;
+printf "i,z,w,gap,c'x,Feasible\n" >> data/cutting_plane/iterations.csv;
+
+param FLOWS {A, O, CUTS} default 0;       # Flows per origin of cut n
+
+repeat {
+    printf "Master Problem Iteration %i\n", NCUTS;
+    solve MasterProblem;
+    display MasterProblem.result;
+
+    if VARIANT = 1 then let {(i, j) in A} MU[i, j] := mu[i, j];
+    else {
+        if VARIANT = 2 then let MUA := 1 / (NCUTS);
+        else let MUA := NCUTS^2 / sum{k in 1..NCUTS} k^2;
+        printf "MUA = %f\n", MUA;
+        
+        let {(i, j) in A} MU[i, j] := mu[i, j] + MUA * (MU[i, j] - mu[i, j]);
+    }
+    printf "Sub Problem Iteration %i\n", NCUTS;
+    solve SubProblem;
+    display SubProblem.result;
+
+    let NCUTS := NCUTS + 1;
+
+    let {(i, j) in A} FLOW[i, j, NCUTS] := tf[i, j];
+    let {f in FN, o in O} AFO[f, o, NCUTS] := afo[f, o];
+    let {f in FN, i in N, o in O} AFD[f, i, o, NCUTS] := afd[f, i, o];
+    
+    let {(i, j) in A, l in O} FLOWS[i, j, l, NCUTS] := flow[i, j, l];
+
+    let FEASIBLE := 'TRUE';
+ 	for {(i,j) in A} {
+        if Y[i, j] - tf[i, j] < -epsilon then let FEASIBLE := 'FALSE';
+    }	
+    printf "%i,%d,%d,%.2e,%d,%s\n", NCUTS - 1, z, w, abs(w-z), sum {(i, j) in A} C[i, j] * tf[i, j], FEASIBLE >> data/cutting_plane/iterations.csv;
+
+    if abs(w-z) < epsilon then {
+        printf "Convergence reached in %i iterations\n", NCUTS;
+        break;
+    }
+}
+
+display w, z;
+# display cuts;
+
+param x_opt {A};
+param x_opts {A, O};
+let {(i, j) in A} x_opt[i, j] := sum {k in CUTS} cuts[k] * FLOW[i, j, k];
+let {(i, j) in A, l in O} x_opts[i, j, l] := sum {k in CUTS} cuts[k] * FLOWS[i, j, l, k];
+
+printf "Optimal objective value: %.2f \n", sum {(i,j) in A} C[i, j] * x_opt[i, j];
+let FEASIBLE := 'TRUE';
+for {(i, j) in A} {
+        if Y[i, j] - x_opt[i, j] < -epsilon then let FEASIBLE := 'FALSE';
+    }
+printf "Feasible: %s \n \n", FEASIBLE;
+
+for {(i, j) in A} {
+    if x_opt[i, j] == 0 then continue;
+    printf "%d,%d,%.0f\n", i, j, x_opt[i, j] >> data/cutting_plane/total_flows.csv;
+}
+
+for {l in O} {
+    for {(i, j) in A} {
+        if x_opts[i, j, l] == 0 then continue;
+        if x_opts[i, j, l] = x_opt[i, j] then printf "%d,%d,%d,%.0f\n", i, j, l, x_opts[i, j, l] >> data/cutting_plane/flows.csv;
+        else printf "%d,%d,%d,%.0f (%.0f)\n", i, j, l, x_opts[i, j, l], x_opt[i, j] >> data/cutting_plane/flows.csv;
+    }
+}
+
+
+printf "param NCUTS := %i;\n\n", NCUTS >> dual.dat;
+printf "param FLOW :=\n" >> dual.dat;
+for {k in CUTS} {
+    printf "# Cut %i\n", k >> dual.dat;
+    for {(i, j) in A} {
+        if FLOW[i, j, k] = 0 then continue;
+        printf "%i\t%i\t%i\t%i\n", i, j, k, FLOW[i, j, k] >> dual.dat;
+    }
+}
+printf ";\n\n" >> dual.dat;
+
+printf "param AFO :=\n" >> dual.dat;
+for {k in CUTS} {
+    printf "# Cut %i\n", k >> dual.dat;
+    for {f in FN, l in O} {
+        if AFO[f, l, k] = 0 then continue;
+        printf "%i\t%i\t%i\t%i\n", f, l, k, AFO[f, l, k] >> dual.dat;
+    }
+}
+printf ";\n\n" >> dual.dat;
+
+printf "param AFD :=\n" >> dual.dat;
+for {k in CUTS} {
+    printf "# Cut %i\n", k >> dual.dat;
+    for {f in FN, i in N, l in O} {
+        if AFD[f, i, l, k] = 0 then continue;
+        printf "%i\t%i\t%i\t%i\t%i\n", f, i, l, k, AFD[f, i, l, k] >> dual.dat;
+    }
+}
+printf ";\n\n" >> dual.dat;

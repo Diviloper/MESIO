@@ -1,0 +1,22 @@
+
+reset;
+
+model dual.mod;
+data cutting_plane.dat;
+data dual.dat;
+data caps.dat;
+option solver cplex;
+
+solve;
+
+display z;
+display alpha;
+
+param x_opt {A};
+let {(i, j) in A} x_opt[i, j] := sum {k in CUTS} alpha[k] * FLOW[i, j, k];
+printf "Optimal objective value: %.2f \n", sum {(i,j) in A} C[i, j] * x_opt[i, j];
+
+for {(i, j) in A} {
+    if x_opt[i, j] == 0 then continue;
+    printf "%d,%d,%.0f\n", i, j, x_opt[i, j] >> data/dual/total_flows.csv;
+}
