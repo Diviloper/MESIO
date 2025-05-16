@@ -1,0 +1,77 @@
+reset;
+
+model fw.mod;
+data net.dat;
+options solver minos;
+
+param alfa;
+param u {A};
+param X {A};
+
+param pSTOP;
+param l;
+param relgap;
+param f_obj;
+
+problem AoN: f, tf, I, flux_total, Vg;  # SUBPROBLEM Definition.
+# problem Q: f, X, I, flux_total, Vnl; # Traffic Assignment (Equilibrium problem) Definition.
+
+let {(i, j) in A} S[i, j] := 1;
+
+solve AoN; 
+
+let {(i, j) in A} X[i, j] := tf[i, j];
+
+let pSTOP := 0; 
+let l := 1;
+
+param delta := 0.005;
+param epsilon := 0.0001;
+
+repeat while l <= 100 and pSTOP = 0 {
+
+	# Update Ck (1)
+	let { (i, j) in A } S[i, j] := C[i, j] + 0.005 * X[i, j];
+
+	solve AoN;
+	
+	# Evaluate relative gap (2)
+	let relgap :=
+		  -(sum{(i, j) in A} S[i,j] * (tf[i,j] - X[i,j])) / 
+		   (sum{(i, j) in A} S[i,j] * X[i,j]);
+	
+	if relgap < epsilon then {
+		break;
+	}
+
+	# Line search (3)
+	# -SUM(Sij(vij)'dij) / delta * SUM(dij^2) (For only linear boundary functions)
+	let alfa := 
+		- (sum { (i, j) in A } S[i, j] * (tf[i, j] - X[i, j])) /
+		  delta * (sum { (i, j) in A } (tf[i, j] - X[i, j])^2); # COMPLETE
+
+	# Update Xk (4)
+	let {(i, j) in A} X[i, j] := X[i, j] + alfa * (tf[i, j] - X[i, j]);
+	let f_obj := sum{(i, j) in A} S[i,j] * X[i,j];
+
+	display l, f_obj, alfa, relgap;
+	let l := l + 1;
+}
+
+display X;
+# solve Q;
+# display # COMPLETE
+
+/*
+FW:
+0) Find x0 in P
+1) ck = gradient f(xk)
+   solve Min(y) ck'y, s.t y in P --> yh (Vg)
+2) Evaluate relative gap
+3) Line Search:Min(a) f(xk + a(yh - xk)), s.t. 0 <= a <= 1 (d = yh - xk) --> a*
+4) xk+1 = xk + a*d
+
+Min(x) f(x) s.t. x in P (Vnl)
+
+TAP Objective function : integral[0, vij] sij(x) delta x --> cij*x + delta/2 x^2
+*/

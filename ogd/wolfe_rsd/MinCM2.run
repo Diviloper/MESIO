@@ -3,62 +3,41 @@ data net.dat;
 options solver minos;
 
 param alfa;
-param u {links};
-param X {links};
+param u{links};
+param vv{links};
 
 param pSTOP;
 param l;
 param relgap;
 param f_obj;
 
-problem AoN: f, X, I, flux_total, Vg;  # SUBPROBLEM Definition. CHECK AND COMPLETE
-problem Q: f, X, I, flux_total, Vnl; # Traffic Assignment (Equilibrium problem) Definition. CHECK AND COMPLETE
+problem AoN:  Vg;  # SUBPROBLEM Definition. CHECK AND COMPLETE
+problem Q:   , Vnl; # Traffic Assignment (Equilibrium problem) Definition. CHECK AND COMPLETE
 
-let {(i, j) in links} S[i, j] := 1;
+let {(i,j) in links} t0[i,j]:=1;
 
 solve AoN; 
 
-let {(i, j) in links} X[i, j] := X[i, j];
+let {(i,j) in links} vv[i,j]:=v[i,j];
 
-let pSTOP := 0; 
-let l := 1;
+let pSTOP:=0; 
+let l:=1;
 
-repeat while l <= 100 and pSTOP = 0 {
-
-	# Update Ck (1)
-	let { (i, j) in A }: S[i, j] := C[i, j] + 0.005 * X[i, j]
+repeat while l <=100 and pSTOP=0 {
 
 	solve AoN;
 	
-	# Evaluate relative gap (2)
-	let relgap :=    ; # COMPLETE
+	let relgap:=    ; # COMPLETE
 
-	# Line search (3)
-	# -SUM(Sij(vij)'dij) / delta * SUM(dij^2) (For only linear boundary functions)
-	let alfa := ; # COMPLETE
-
-	# Update Xk (4)
-	let {(i, j) in links} X[i, j] := X[i, j] + alfa * (TF[i, j] - X[i, j]);
-	let f_obj := ; # COMPLETE
+	
+	let alfa:= ; # COMPLETE
+	let {(i,j) in links} vv[i,j]:=vv[i,j]+alfa*(v[i,j] - vv[i,j]);
+	let f_obj:= ; # COMPLETE
 
 	display l, f_obj, alfa, relgap;
-	let l := l + 1;
-}
+	let l:=l+1;
 
-display X;
+}
+display vv;
 solve Q;
 display # COMPLETE
-
-/*
-FW:
-0) Find x0 in P
-1) ck = nabla f(xk)
-   solve Min(y) ck'y, s.t y in P --> yh (Vg)
-2) Evaluate relative gap
-3) Line Search:Min(a) f(xk + a(yh - xk)), s.t. 0 <= a <= 1 (d = yh - xk) --> a*
-4) xk+1 = xk + a*d
-
-Min(x) f(x) s.t. x in P (Vnl)
-
-TAP Objective function : integral[0, vij] sij(x) delta x --> cij*x + delta/2 x^2
-*/
