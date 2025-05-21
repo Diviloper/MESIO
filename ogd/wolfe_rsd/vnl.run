@@ -1,0 +1,34 @@
+reset;
+
+model fw.mod;
+data net.dat;
+options solver minos;
+
+param alfa;
+param u {A};
+param X {A};
+
+param pSTOP;
+param l;
+param relgap;
+param f_obj;
+
+problem AoN: f, tf, I, flux_total, Vg;  # SUBPROBLEM Definition.
+problem Q: f, tf, I, flux_total, Vnl; # Traffic Assignment (Equilibrium problem) Definition.
+
+solve Q;
+
+
+/*
+FW:
+0) Find x0 in P
+1) ck = gradient f(xk)
+   solve Min(y) ck'y, s.t y in P --> yh (Vg)
+2) Evaluate relative gap
+3) Line Search:Min(a) f(xk + a(yh - xk)), s.t. 0 <= a <= 1 (d = yh - xk) --> a*
+4) xk+1 = xk + a*d
+
+Min(x) f(x) s.t. x in P (Vnl)
+
+TAP Objective function : integral[0, vij] sij(x) dx --> cij*x + delta/2 x^2
+*/

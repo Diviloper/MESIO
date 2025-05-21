@@ -13,9 +13,11 @@ param g {OD} > 0;               # Required flow
 param C { (i, j) in A } :=
  95 + (XC[i] - XC[j])^2 + 8*(YC[i] - YC[j])^2;
 param S {A};                   # Link Cost
+param delta := 0.005;
+param congestion = 100;
 param T { i in N, k in O } :=
-    if i in DxO[k] then -1.0 * g[k, i]
-    else if i = k then sum {j in DxO[k]} g[k, j] 
+    if i in DxO[k] then -congestion * g[k, i]
+    else if i = k then sum {j in DxO[k]} congestion * g[k, j] 
     else 0;
 
 param TF {A};
@@ -30,4 +32,4 @@ subject to flux_total { (i, j) in A }:
     tf[i, j] = sum { k in O } f[i, j, k];
 
 minimize Vg: sum { (i, j) in A } tf[i, j] * S[i, j];
-# minimize Vnl: sum { (i, j) in A } ; # COMPLETE 
+minimize Vnl: sum{(i, j) in A} (C[i,j] * tf[i,j] + 0.5 * delta * tf[i, j]^2); # COMPLETE 

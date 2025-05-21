@@ -14,32 +14,35 @@ param relgap;
 param f_obj;
 
 problem AoN: f, tf, I, flux_total, Vg;  # SUBPROBLEM Definition.
-# problem Q: f, X, I, flux_total, Vnl; # Traffic Assignment (Equilibrium problem) Definition.
+problem Q: f, tf, I, flux_total, Vnl; # Traffic Assignment (Equilibrium problem) Definition.
+
 
 let {(i, j) in A} S[i, j] := 1;
 
 solve AoN; 
-
 let {(i, j) in A} X[i, j] := tf[i, j];
+display X;
 
-let pSTOP := 0; 
 let l := 1;
 
-param delta := 0.005;
 param epsilon := 0.0001;
 
-repeat while l <= 100 and pSTOP = 0 {
+repeat while l <= 400 {
+	printf "------------------Iteration %d------------------\n", l;
 
 	# Update Ck (1)
-	let { (i, j) in A } S[i, j] := C[i, j] + 0.005 * X[i, j];
+	let { (i, j) in A } S[i, j] := C[i, j] + delta * X[i, j];
+
+	# display C, X, S;
 
 	solve AoN;
-	
+
 	# Evaluate relative gap (2)
 	let relgap :=
 		  -(sum{(i, j) in A} S[i,j] * (tf[i,j] - X[i,j])) / 
 		   (sum{(i, j) in A} S[i,j] * X[i,j]);
-	
+	printf "Relative Gap: %.2f\%\n", relgap * 100;
+
 	if relgap < epsilon then {
 		break;
 	}
@@ -48,19 +51,24 @@ repeat while l <= 100 and pSTOP = 0 {
 	# -SUM(Sij(vij)'dij) / delta * SUM(dij^2) (For only linear boundary functions)
 	let alfa := 
 		- (sum { (i, j) in A } S[i, j] * (tf[i, j] - X[i, j])) /
-		  delta * (sum { (i, j) in A } (tf[i, j] - X[i, j])^2); # COMPLETE
+		  (delta * (sum { (i, j) in A } (tf[i, j] - X[i, j])^2)); # COMPLETE
+	let alfa := min(1, alfa);
+	printf "Alpha: %.2e\n", alfa;
 
 	# Update Xk (4)
 	let {(i, j) in A} X[i, j] := X[i, j] + alfa * (tf[i, j] - X[i, j]);
-	let f_obj := sum{(i, j) in A} S[i,j] * X[i,j];
 
-	display l, f_obj, alfa, relgap;
+	let f_obj := sum{(i, j) in A} (C[i,j] * X[i,j] + 0.5 * delta * X[i, j]^2);
+	printf "Objective Function: %.2e\n", f_obj;
+
 	let l := l + 1;
 }
 
 display X;
-# solve Q;
-# display # COMPLETE
+solve Q;
+display tf;
+
+display Vnl, f_obj, f_obj - Vnl;
 
 /*
 FW:
@@ -73,5 +81,5 @@ FW:
 
 Min(x) f(x) s.t. x in P (Vnl)
 
-TAP Objective function : integral[0, vij] sij(x) delta x --> cij*x + delta/2 x^2
+TAP Objective function : integral[0, vij] sij(x) dx --> cij*x + delta/2 x^2
 */
