@@ -1,0 +1,136 @@
+reset;
+
+# Imports
+model rsd.mod;
+model rsd_barycentric.mod;
+data net.dat;
+options solver minos;
+
+# Scenario Parameters
+param EPSILON := 0.0005;
+param MAX_ITERATIONS := 10;
+param RHO := 4;
+let DELTA := 0.0035;
+let CONGESTION := 100;
+
+# Parameters
+param ITERATION;
+
+param X {A};
+
+param WX {A};
+param USED_WX;
+
+param WS {1..RHO, A};
+param USED_INDICES {1..RHO};
+
+param BLB;
+param OBJ_FUNC;
+param GAP;
+
+param INDEX;
+param SMALLEST;
+param SMALLEST_INDEX;
+
+
+# Models
+
+problem Bar: lambda, convex_combination, unit_lambda_sum, Minimize_Active_Points;
+problem Sub: f, tf, I, total_flux, Gradient_F;
+problem Master: alpha, x, unit_alpha_sum, convex_hull, F;
+
+# Initialization
+let ITERATION := 0;
+let {r in 1..RHO} USED_INDICES[r] := 0;
+let BLB := -Infinity;
+
+let {(i, j) in A} S[i, j] := 1;
+solve Sub;
+let {(i, j) in A} X[i, j] := tf[i, j];
+let {(i, j) in A} WX[i, j] := X[i, j];
+let USED_WX := 1;
+
+
+repeat while ITERATION <= MAX_ITERATIONS {
+
+    printf "-------------ITERATION %d----------------\n\n", ITERATION;
+
+    # 1 Solve Subproblem
+    # 1.1 Update Arc cost
+    let { (i, j) in A } S[i, j] := C[i, j] + DELTA * X[i, j];
+    solve Sub;
+
+    # 2 Update Working Sets
+    if (sum {r in 1..RHO} USED_INDICES[r]) < RHO then {
+        for {r in 1..RHO} {
+            if USED_INDICES[r] = 0 then {
+                let INDEX := r;
+                break;
+            }
+        }
+        printf "Adding new vertex at index %d\n", INDEX;
+        let {(i, j) in A} WS[INDEX, i, j] := tf[i, j];
+        let USED_INDICES[INDEX] := 1;
+    } else {
+        let NPOINTS := RHO;
+        let {(i, j) in A} P[i, j] := X[i, j];
+        let {r in 1..NPOINTS, (i, j) in A} POINTS[r, i, j] := WS[r, i, j];
+        solve Bar;
+        let SMALLEST := Infinity;
+        for {r in 1..NPOINTS} {
+            if lambda[r] < SMALLEST then {
+                let SMALLEST_INDEX := r;
+            }
+        }
+        display lambda;
+        printf "Replacing vertex at index %d\n", SMALLEST_INDEX;
+        let {(i, j) in A} WS[SMALLEST_INDEX, i, j] := tf[i, j];
+
+        let {(i, j) in A} WX[i, j] := X[i, j];
+        let USED_WX := 1;
+    }
+
+    # 3 Stopping Criterion
+    let OBJ_FUNC := sum{(i, j) in A} (C[i,j] * X[i,j] + 0.5 * DELTA * X[i, j]^2);
+    let BLB := max(BLB, OBJ_FUNC + sum{(i, j) in A} (S[i, j] * (tf[i, j] - X[i, j]))); # f(X) + der_f(X)'(tf - X)
+    let GAP := (OBJ_FUNC - BLB) / BLB;
+    display GAP;
+    if GAP <= EPSILON then break;
+
+    # 4 Master Problem
+
+    let COLUMNS := USED_WX + sum{r in 1..RHO} USED_INDICES[r];
+    if USED_WX then {
+        let {(i, j) in A} W[1, i, j] := WX[i, j];
+    }
+    let INDEX := 1 + USED_WX;
+    for {r in 1..RHO} {
+        if USED_INDICES[r] then {
+            let {(i, j) in A} W[INDEX, i, j] := WS[r, i, j];
+            let INDEX := INDEX + 1;
+        }
+    }
+    solve Master;
+    display alpha;
+    if (sum{(i, j) in A} (x[i, j] - X[i, j]) = 0) then printf "Master x didn't change :(\n";
+    let {(i, j) in A} X[i, j] := x[i, j];
+    # Purge WX and WS
+    let INDEX := 1 + USED_WX;
+    for {r in 1..RHO} {
+        if USED_INDICES[r] = 1 then {
+            if alpha[INDEX] = 0 then {
+                printf "Purging vertex %d in WS\n", r; 
+                let USED_INDICES[r] := 0;
+            }
+            let INDEX := INDEX + 1;
+        }
+    }
+    if USED_WX and alpha[1] = 0 then {
+        printf "Purging WX\n";
+        let USED_WX := 0;
+    }
+
+    let ITERATION := ITERATION + 1;
+}
+
+display F;

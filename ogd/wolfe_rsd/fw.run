@@ -5,8 +5,8 @@ data net.dat;
 options solver minos;
 
 # Scenario Params
-let DELTA := 0.005;
-let CONGESTION := 100;
+let DELTA := 0.0035;
+let CONGESTION := 200;
 
 # Iteration Params
 param ITERATION;
@@ -14,6 +14,7 @@ param ALPHA;
 param X {A};
 param GAP;
 param OBJ_FUNC;
+param USED_VER;
 
 problem AoN: f, tf, I, flux_total, Vg;  # SUBPROBLEM Definition.
 problem Q: f, tf, I, flux_total, Vnl; # Traffic Assignment (Equilibrium problem) Definition.
@@ -30,11 +31,13 @@ let ITERATION := 1;
 param EPSILON := 0.0005;
 param MAX_ITERATIONS := 500;
 
+printf "Iteration,Objective Function,Relative Gap,Step Length,Number of Vertices\n" > "iterations/fw.csv";
+
 repeat while ITERATION <= MAX_ITERATIONS {
 	printf "------------------Iteration %d------------------\n", ITERATION;
 
 	# Update Ck (1)
-	let { (i, j) in A } S[i, j] := C[i, j] + delta * X[i, j];
+	let { (i, j) in A } S[i, j] := C[i, j] + DELTA * X[i, j];
 
 	# display C, X, S;
 
@@ -46,23 +49,36 @@ repeat while ITERATION <= MAX_ITERATIONS {
 		   (sum{(i, j) in A} S[i,j] * X[i,j]);
 	printf "Relative Gap: %.2f\%\n", GAP * 100;
 
-	if GAP < EPSILON then {
-		break;
-	}
-
 	# Line search (3)
-	# -SUM(Sij(vij)'dij) / delta * SUM(dij^2) (For only linear boundary functions)
+	# -SUM(Sij(vij)'dij) / DELTA * SUM(dij^2) (For only linear boundary functions)
 	let ALPHA := 
 		- (sum { (i, j) in A } S[i, j] * (tf[i, j] - X[i, j])) /
-		  (delta * (sum { (i, j) in A } (tf[i, j] - X[i, j])^2)); # COMPLETE
+		  (DELTA * (sum { (i, j) in A } (tf[i, j] - X[i, j])^2)); # COMPLETE
 	let ALPHA := min(1, ALPHA);
 	printf "Alpha: %.2e\n", ALPHA;
 
 	# Update Xk (4)
 	let {(i, j) in A} X[i, j] := X[i, j] + ALPHA * (tf[i, j] - X[i, j]);
 
-	let OBJ_FUNC := sum{(i, j) in A} (C[i,j] * X[i,j] + 0.5 * delta * X[i, j]^2);
+	let OBJ_FUNC := sum{(i, j) in A} (C[i,j] * X[i,j] + 0.5 * DELTA * X[i, j]^2);
 	printf "Objective Function: %.2e\n", OBJ_FUNC;
+
+	let USED_VER := 0;
+	for {i in N} {
+		for {(j, k) in A: j == i || k == i} {
+			if tf[j,k] > 0 then {
+				let USED_VER := USED_VER + 1;
+				break;
+			}
+		}
+	}
+
+	printf "%d,%.4e,%.4e,%.4e,%d\n", ITERATION, OBJ_FUNC, GAP, ALPHA, USED_VER > "iterations/fw.csv";
+
+	if GAP < EPSILON then {
+		break;
+	}
+
 
 	let ITERATION := ITERATION + 1;
 }
@@ -70,6 +86,10 @@ repeat while ITERATION <= MAX_ITERATIONS {
 display X;
 solve Q;
 display tf;
+
+option display_1col 200;
+option omit_zero_rows 1;
+display tf > "results/fw.txt";
 
 display Vnl, OBJ_FUNC, OBJ_FUNC - Vnl;
 
@@ -84,5 +104,5 @@ FW:
 
 Min(x) f(x) s.t. x in P (Vnl)
 
-TAP Objective function : integral[0, vij] sij(x) dx --> cij*x + delta/2 x^2
+TAP Objective function : integral[0, vij] sij(x) dx --> cij*x + DELTA/2 x^2
 */
