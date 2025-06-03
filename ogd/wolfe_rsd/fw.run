@@ -4,14 +4,16 @@ model fw.mod;
 data net.dat;
 options solver minos;
 
-param alfa;
-param u {A};
-param X {A};
+# Scenario Params
+let DELTA := 0.005;
+let CONGESTION := 100;
 
-param pSTOP;
-param l;
-param relgap;
-param f_obj;
+# Iteration Params
+param ITERATION;
+param ALPHA;
+param X {A};
+param GAP;
+param OBJ_FUNC;
 
 problem AoN: f, tf, I, flux_total, Vg;  # SUBPROBLEM Definition.
 problem Q: f, tf, I, flux_total, Vnl; # Traffic Assignment (Equilibrium problem) Definition.
@@ -23,12 +25,13 @@ solve AoN;
 let {(i, j) in A} X[i, j] := tf[i, j];
 display X;
 
-let l := 1;
+let ITERATION := 1;
 
-param epsilon := 0.0001;
+param EPSILON := 0.0005;
+param MAX_ITERATIONS := 500;
 
-repeat while l <= 400 {
-	printf "------------------Iteration %d------------------\n", l;
+repeat while ITERATION <= MAX_ITERATIONS {
+	printf "------------------Iteration %d------------------\n", ITERATION;
 
 	# Update Ck (1)
 	let { (i, j) in A } S[i, j] := C[i, j] + delta * X[i, j];
@@ -38,37 +41,37 @@ repeat while l <= 400 {
 	solve AoN;
 
 	# Evaluate relative gap (2)
-	let relgap :=
+	let GAP :=
 		  -(sum{(i, j) in A} S[i,j] * (tf[i,j] - X[i,j])) / 
 		   (sum{(i, j) in A} S[i,j] * X[i,j]);
-	printf "Relative Gap: %.2f\%\n", relgap * 100;
+	printf "Relative Gap: %.2f\%\n", GAP * 100;
 
-	if relgap < epsilon then {
+	if GAP < EPSILON then {
 		break;
 	}
 
 	# Line search (3)
 	# -SUM(Sij(vij)'dij) / delta * SUM(dij^2) (For only linear boundary functions)
-	let alfa := 
+	let ALPHA := 
 		- (sum { (i, j) in A } S[i, j] * (tf[i, j] - X[i, j])) /
 		  (delta * (sum { (i, j) in A } (tf[i, j] - X[i, j])^2)); # COMPLETE
-	let alfa := min(1, alfa);
-	printf "Alpha: %.2e\n", alfa;
+	let ALPHA := min(1, ALPHA);
+	printf "Alpha: %.2e\n", ALPHA;
 
 	# Update Xk (4)
-	let {(i, j) in A} X[i, j] := X[i, j] + alfa * (tf[i, j] - X[i, j]);
+	let {(i, j) in A} X[i, j] := X[i, j] + ALPHA * (tf[i, j] - X[i, j]);
 
-	let f_obj := sum{(i, j) in A} (C[i,j] * X[i,j] + 0.5 * delta * X[i, j]^2);
-	printf "Objective Function: %.2e\n", f_obj;
+	let OBJ_FUNC := sum{(i, j) in A} (C[i,j] * X[i,j] + 0.5 * delta * X[i, j]^2);
+	printf "Objective Function: %.2e\n", OBJ_FUNC;
 
-	let l := l + 1;
+	let ITERATION := ITERATION + 1;
 }
 
 display X;
 solve Q;
 display tf;
 
-display Vnl, f_obj, f_obj - Vnl;
+display Vnl, OBJ_FUNC, OBJ_FUNC - Vnl;
 
 /*
 FW:
