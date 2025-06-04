@@ -53,21 +53,3 @@ subject to convex_hull_alpha {(i, j) in A}:
     x[i, j] = sum {r in 0..RHO} alpha[r] * W[r, i, j];
 
 minimize F: sum{(i, j) in A} (C[i,j] * x[i,j] + 0.5 * DELTA * x[i, j]^2);
-
-
-# Barycentric Coordinates
-param X {A};
-
-var lambda {1..RHO} >= 0;  # Barycentric Coordinates
-
-subject to used_indices_lambda {r in 1..RHO}:
-    lambda[r] <= USED_INDICES[r];
-
-subject to convex_lambda_combination {(i, j) in A}:
-    sum {r in 1..RHO} lambda[r] * W[r, i, j] = X[i, j];
-
-subject to unit_lambda_sum:
-    sum {r in 1..RHO} lambda[r] = 1;
-
-minimize Minimize_Active_Points: sum {r in 1..RHO} (if lambda[r] > 0 then 1 else 0);
-minimize DummyObjective: 0;

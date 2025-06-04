@@ -15,6 +15,8 @@ let CONGESTION := 100;
 # Parameters
 param ITERATION;
 
+param X {A};
+
 param BLB;
 param OBJ_FUNC;
 param GAP;
@@ -26,7 +28,6 @@ param SMALLEST_INDEX;
 
 # Models
 
-problem Bar: lambda, used_indices_lambda, convex_lambda_combination, unit_lambda_sum, Minimize_Active_Points;
 problem Sub: f, tf, I, total_flux, Gradient_F;
 problem Master: alpha, x, unit_alpha_sum, convex_hull_alpha, used_indices_alpha, F;
 
@@ -62,11 +63,9 @@ repeat while ITERATION <= MAX_ITERATIONS {
         let {(i, j) in A} W[INDEX, i, j] := tf[i, j];
         let USED_INDICES[INDEX] := 1;
     } else {
-        solve Bar;
-        display lambda;
         let SMALLEST := Infinity;
         for {r in 1..RHO} {
-            if lambda[r] < SMALLEST then {
+            if alpha[r] < SMALLEST then {
                 let SMALLEST_INDEX := r;
             }
         }
@@ -87,7 +86,7 @@ repeat while ITERATION <= MAX_ITERATIONS {
     # 4 Master Problem
 
     solve Master;
-    display alpha;
+    display USED_INDICES, alpha;
     if (sum{(i, j) in A} (x[i, j] - X[i, j]) = 0) then printf "Master x didn't change :(\n";
     let {(i, j) in A} X[i, j] := x[i, j];
     
