@@ -36,16 +36,38 @@ minimize Gradient_F: sum { (i, j) in A } tf[i, j] * S[i, j];
 
 
 # Master Problem
-param COLUMNS;
-param W{1..COLUMNS, A};
+param RHO;
+param W {0..RHO, A} default 0;
+param USED_INDICES {0..RHO} binary;
 
-var alpha {1..COLUMNS} >= 0;
+var alpha {0..RHO} >= 0;
 var x {A} >= 0;
 
-subject to unit_alpha_sum:
-    sum {r in 1..COLUMNS} alpha[r] = 1;
+subject to used_indices_alpha {r in 0..RHO}:
+    alpha[r] <= USED_INDICES[r];
 
-subject to convex_hull {(i, j) in A}:
-    x[i, j] = sum {r in 1..COLUMNS} alpha[r] * W[r, i, j];
+subject to unit_alpha_sum:
+    sum {r in 0..RHO} alpha[r] = 1;
+
+subject to convex_hull_alpha {(i, j) in A}:
+    x[i, j] = sum {r in 0..RHO} alpha[r] * W[r, i, j];
 
 minimize F: sum{(i, j) in A} (C[i,j] * x[i,j] + 0.5 * DELTA * x[i, j]^2);
+
+
+# Barycentric Coordinates
+param X {A};
+
+var lambda {1..RHO} >= 0;  # Barycentric Coordinates
+
+subject to used_indices_lambda {r in 1..RHO}:
+    lambda[r] <= USED_INDICES[r];
+
+subject to convex_lambda_combination {(i, j) in A}:
+    sum {r in 1..RHO} lambda[r] * W[r, i, j] = X[i, j];
+
+subject to unit_lambda_sum:
+    sum {r in 1..RHO} lambda[r] = 1;
+
+minimize Minimize_Active_Points: sum {r in 1..RHO} (if lambda[r] > 0 then 1 else 0);
+minimize DummyObjective: 0;
