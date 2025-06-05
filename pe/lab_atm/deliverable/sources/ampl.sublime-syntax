@@ -1,0 +1,140 @@
+%YAML 1.2
+---
+# AMPL Syntax Definition for Sublime Text
+# Author: Gemini (Based on AMPL Language Reference)
+# Version: 1.0
+
+name: AMPL
+scope: source.ampl
+file_extensions:
+  - ampl  # Model/Script files
+  - mod   # Model files
+  - dat   # Data files
+  - run   # Script files
+  - inl   # Included files
+
+variables:
+  identifier: '[a-zA-Z_][a-zA-Z0-9_]*'
+
+contexts:
+  main:
+    - include: comments
+    - include: strings
+    - include: keywords
+    - include: operators
+    - include: numbers
+    - include: functions
+    - include: environment_variables
+    - include: punctuation
+    - include: identifiers # Keep identifiers somewhat general, matched after specific keywords
+
+  comments:
+    - match: '#'
+      scope: punctuation.definition.comment.ampl
+      push:
+        - meta_scope: comment.line.number-sign.ampl
+        - match: '$\n?' # Match end of line or end of file
+          pop: true
+
+  strings:
+    - match: '"'
+      scope: punctuation.definition.string.begin.ampl
+      push:
+        - meta_scope: string.quoted.double.ampl
+        - match: '\\.' # Handle escaped characters like \" or \\
+          scope: constant.character.escape.ampl
+        - match: '"'
+          scope: punctuation.definition.string.end.ampl
+          pop: true
+    - match: "'"
+      scope: punctuation.definition.string.begin.ampl
+      push:
+        - meta_scope: string.quoted.single.ampl
+        - match: '\\.' # Handle escaped characters like \' or \\
+          scope: constant.character.escape.ampl
+        - match: "'"
+          scope: punctuation.definition.string.end.ampl
+          pop: true
+
+  keywords:
+    # Declaration Keywords
+    - match: '\b(?i)(set|param|var|objective|maximize|minimize|subject to|constraint|model|data|check|suffix|node|arc|net_out|from|to|problem)\b'
+      scope: storage.type.ampl
+    # Control Flow Keywords
+    - match: '\b(?i)(if|then|else|for|in|by|while|repeat|break|continue)\b'
+      scope: keyword.control.ampl
+    # Command Keywords
+    - match: '\b(?i)(solve|display|printf|fix|unfix|let|read|write|reset|update|option|shell|cd|include|drop|close|open|quit|exit|load|unload|show|display)\b'
+      scope: keyword.command.ampl
+    # Set Operator Keywords (also logical/quantifier related)
+    - match: '\b(?i)(union|inter|diff|symdiff|cross|within|ordered|circular)\b'
+      scope: keyword.operator.set.ampl
+    # Logical/Quantifier Keywords
+    - match: '\b(?i)(and|or|not|exists|forall|sum|prod|min|max|count)\b'
+      scope: keyword.operator.logical.ampl
+    # Type Keywords
+    - match: '\b(?i)(integer|binary|symbolic)\b'
+      scope: storage.modifier.ampl
+
+  operators:
+    # Arithmetic Operators
+    - match: '(\+|-|\*|\/|\^|\*\*|\b(?i)(div)\b)'
+      scope: keyword.operator.arithmetic.ampl
+    # Relational Operators
+    - match: '(<|<=|=|==|>=|>|<>|!=)'
+      scope: keyword.operator.comparison.ampl
+    # Assignment Operator
+    - match: ':='
+      scope: keyword.operator.assignment.ampl
+    # Set Membership (often used with 'for' or 'if')
+    - match: '\b(?i)in\b' # Explicitly handle 'in' here if not caught by control flow
+      scope: keyword.operator.set.ampl
+
+  numbers:
+    # Scientific notation (e.g., 1.2e-5, 3E+10)
+    - match: '\b[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)\b'
+      scope: constant.numeric.float.ampl
+    # Floating point numbers (e.g., 1.23, .5)
+    - match: '\b([0-9]*\.[0-9]+)\b'
+      scope: constant.numeric.float.ampl
+    # Integers (e.g., 123, 0)
+    - match: '\b[0-9]+\b'
+      scope: constant.numeric.integer.ampl
+
+  functions:
+    # Match common built-in functions when followed by an opening parenthesis
+    - match: '\b(?i)(abs|ceil|floor|round|trunc|sqrt|exp|log|log10|sin|cos|tan|asin|acos|atan|atan2|sinh|cosh|tanh|precision|Irand224|Normal|Normal01|Uniform|Uniform01|card|length|substr|sprintf|system|time|member|ord|ord0|first|last|next|prev|nextw|prevw|exists|CurrentDate|CurrentTime|Div|Mod|Round|Trunc|GMPL|Infinity|NaN|Version|GMPL_prob_name|GMPL_version|str2time|time2str|basename|dirname|getenv|setenv|putenv|system|assert)\b(?=\s*\()'
+      scope: support.function.builtin.ampl
+
+  environment_variables:
+     # Match environment variables like $TMPDIR
+    - match: '\$[a-zA-Z_][a-zA-Z0-9_]*'
+      scope: variable.parameter.environment.ampl
+
+  punctuation:
+    - match: ';'
+      scope: punctuation.terminator.statement.ampl
+    - match: ':'
+      scope: punctuation.separator.colon.ampl # Used in constraints, objectives, indexing etc.
+    - match: ','
+      scope: punctuation.separator.comma.ampl
+    - match: '{'
+      scope: punctuation.definition.set.begin.ampl meta.brace.curly.ampl
+    - match: '}'
+      scope: punctuation.definition.set.end.ampl meta.brace.curly.ampl
+    - match: '\['
+      scope: punctuation.definition.indexer.begin.ampl meta.brace.square.ampl
+    - match: ']'
+      scope: punctuation.definition.indexer.end.ampl meta.brace.square.ampl
+    - match: '\('
+      scope: punctuation.parenthesis.begin.ampl meta.brace.round.ampl
+    - match: '\)'
+      scope: punctuation.parenthesis.end.ampl meta.brace.round.ampl
+    # Dot for qualified names (e.g., set.member, param[i].val)
+    - match: '\.'
+      scope: punctuation.accessor.ampl
+
+  identifiers:
+    # Match standard identifiers (variable names, set names, etc.)
+    - match: '{{identifier}}'
+      scope: variable.other.ampl # Or potentially entity.name.function, entity.name.type depending on context (harder to distinguish)
