@@ -29,6 +29,9 @@ set A :=
 	(24,19) (24,21) (24,23)
 ;
 
+param DELTA := 0.0035;
+param CONGESTION := 200;
+
 # Base Flow
 param G: 5   8   12  13  14  17  18  19  21  23 :=
 	3	 50	 50	 50	 50	 50	 50	 50	 50	 50  50

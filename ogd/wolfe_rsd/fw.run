@@ -2,36 +2,33 @@ reset;
 
 model fw.mod;
 data net.dat;
-options solver minos;
-
-# Scenario Params
-let DELTA := 0.0035;
-let CONGESTION := 200;
+option solver minos;
 
 # Iteration Params
 param ITERATION;
 param ALPHA;
 param X {A};
+param XL {A, O};
 param GAP;
 param OBJ_FUNC;
-param USED_VER;
 
-problem AoN: f, tf, I, flux_total, Vg;  # SUBPROBLEM Definition.
-problem Q: f, tf, I, flux_total, Vnl; # Traffic Assignment (Equilibrium problem) Definition.
+problem AoN: f, tf, I, flux_total, Gradient_F;  # SUBPROBLEM Definition.
+problem Q: f, tf, I, flux_total, F; # Traffic Assignment (Equilibrium problem) Definition.
 
 
 let {(i, j) in A} S[i, j] := 1;
 
 solve AoN; 
 let {(i, j) in A} X[i, j] := tf[i, j];
-display X;
+let {(i, j) in A, k in O} XL[i, j, k] := f[i, j, k];
+display Gradient_F;
 
 let ITERATION := 1;
 
 param EPSILON := 0.0005;
-param MAX_ITERATIONS := 500;
+param MAX_ITERATIONS := 1;
 
-printf "Iteration,Objective Function,Relative Gap,Step Length,Number of Vertices\n" > "iterations/fw.csv";
+printf "Iteration,Objective Function,Relative Gap,Step Length\n" > "iterations/fw.csv";
 
 repeat while ITERATION <= MAX_ITERATIONS {
 	printf "------------------Iteration %d------------------\n", ITERATION;
@@ -42,6 +39,7 @@ repeat while ITERATION <= MAX_ITERATIONS {
 	# display C, X, S;
 
 	solve AoN;
+	display Gradient_F;
 
 	# Evaluate relative gap (2)
 	let GAP :=
@@ -59,21 +57,12 @@ repeat while ITERATION <= MAX_ITERATIONS {
 
 	# Update Xk (4)
 	let {(i, j) in A} X[i, j] := X[i, j] + ALPHA * (tf[i, j] - X[i, j]);
+	let {(i, j) in A, k in O} XL[i, j, k] := XL[i, j, k] + ALPHA * (f[i, j, k] - XL[i, j, k]);
 
 	let OBJ_FUNC := sum{(i, j) in A} (C[i,j] * X[i,j] + 0.5 * DELTA * X[i, j]^2);
 	printf "Objective Function: %.2e\n", OBJ_FUNC;
 
-	let USED_VER := 0;
-	for {i in N} {
-		for {(j, k) in A: j == i || k == i} {
-			if tf[j,k] > 0 then {
-				let USED_VER := USED_VER + 1;
-				break;
-			}
-		}
-	}
-
-	printf "%d,%.4e,%.4e,%.4e,%d\n", ITERATION, OBJ_FUNC, GAP, ALPHA, USED_VER > "iterations/fw.csv";
+	printf "%d,%.4e,%.4e,%.4e\n", ITERATION, OBJ_FUNC, GAP, ALPHA > "iterations/fw.csv";
 
 	if GAP < EPSILON then {
 		break;
@@ -85,13 +74,29 @@ repeat while ITERATION <= MAX_ITERATIONS {
 
 display X;
 solve Q;
-display tf;
 
 option display_1col 200;
 option omit_zero_rows 1;
-display tf > "results/fw.txt";
 
-display Vnl, OBJ_FUNC, OBJ_FUNC - Vnl;
+for {(i, j) in A} {
+	if abs(X[i, j] - sum{k in O} XL[i, j, k]) > 1e-4 then print "Error";
+}
+
+for {o in O} {
+	for {i in N} {
+		for {j in N} {
+			if (i, j) not in A then continue;
+			if XL[i, j, o] < 1e-6 then continue;
+			printf "%d,%d,%d,%.2f\n", o, i, j, XL[i, j, o] > (sprintf("results/fw_%d.csv", o));
+		}
+	}
+}
+
+print F;
+print OBJ_FUNC;
+print F - OBJ_FUNC;
+print GAP;
+display ITERATION;
 
 /*
 FW:

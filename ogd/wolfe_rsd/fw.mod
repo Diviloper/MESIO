@@ -20,7 +20,6 @@ param T { i in N, k in O } :=
     else if i = k then sum {j in DxO[k]} CONGESTION * G[k, j] 
     else 0;
 
-param TF {A};
 node I {i in N, k in O}: net_out = T[i, k];
 
 arc f { (i, j) in A, k in O } >= 0,
@@ -31,5 +30,5 @@ var tf { (i, j) in A };
 subject to flux_total { (i, j) in A }:
     tf[i, j] = sum { k in O } f[i, j, k];
 
-minimize Vg: sum { (i, j) in A } tf[i, j] * S[i, j];
-minimize Vnl: sum{(i, j) in A} (C[i,j] * tf[i,j] + 0.5 * DELTA * tf[i, j]^2);
+minimize Gradient_F: sum { (i, j) in A } tf[i, j] * S[i, j];
+minimize F: sum{(i, j) in A} (C[i,j] * tf[i,j] + 0.5 * DELTA * tf[i, j]^2);

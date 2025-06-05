@@ -1,0 +1,20 @@
+reset;
+
+model base.mod;
+data net.dat;
+option solver minos;
+
+problem TAP: f, tf, I, flux_total, F;
+
+solve TAP;
+
+for {o in O} {
+	for {i in N} {
+		for {j in N} {
+			if (i, j) not in A then continue;
+			if f[i, j, o] < 1e-6 then continue;
+			printf "%d,%d,%d,%.2f\n", o, i, j, f[i, j, o] > (sprintf("results/base_%d.csv", o));
+		}
+	}
+}
+print F;

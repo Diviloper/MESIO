@@ -3,14 +3,12 @@ reset;
 # Imports
 model rsd.mod;
 data net.dat;
-options solver minos;
+option solver cplex;
 
 # Scenario Parameters
 param EPSILON := 0.0005;
-param MAX_ITERATIONS := 3;
+param MAX_ITERATIONS := 500;
 let RHO := 4;
-let DELTA := 0.0035;
-let CONGESTION := 100;
 
 # Parameters
 param ITERATION;
@@ -32,7 +30,7 @@ problem Sub: f, tf, I, total_flux, Gradient_F;
 problem Master: alpha, x, unit_alpha_sum, convex_hull_alpha, used_indices_alpha, F;
 
 # Initialization
-let ITERATION := 0;
+let ITERATION := 1;
 let {r in 1..RHO} USED_INDICES[r] := 0;
 let BLB := -Infinity;
 
@@ -41,6 +39,9 @@ solve Sub;
 let {(i, j) in A} X[i, j] := tf[i, j];
 let {(i, j) in A} W[0, i, j] := X[i, j];
 let USED_INDICES[0] := 1;
+display X;
+
+printf "Iteration,Objective Function,Relative Gap,#Vertex,C0,C1,C2,C3,C4\n" > "iterations/rsd.csv";
 
 repeat while ITERATION <= MAX_ITERATIONS {
 
@@ -81,6 +82,9 @@ repeat while ITERATION <= MAX_ITERATIONS {
     let BLB := max(BLB, OBJ_FUNC + sum{(i, j) in A} (S[i, j] * (tf[i, j] - X[i, j]))); # f(X) + der_f(X)'(tf - X)
     let GAP := (OBJ_FUNC - BLB) / BLB;
     display GAP;
+
+    printf "%d,%.4e,%.4e,", ITERATION, OBJ_FUNC, GAP > "iterations/rsd.csv";
+
     if GAP <= EPSILON then break;
 
     # 4 Master Problem
@@ -92,14 +96,25 @@ repeat while ITERATION <= MAX_ITERATIONS {
     
     # Purge W
     for {r in 0..RHO} {
-        if USED_INDICES[r] = 1 and alpha[r] = 0 then {
+        if USED_INDICES[r] = 1 and alpha[r] < 1e-8 then {
             printf "Purging vertex %d in W\n", r; 
             let {(i, j) in A} W[r, i, j] := 0;
             let USED_INDICES[r] := 0;
         }
     }
 
+    printf "%d,%.4e,%.4e,%.4e,%.4e,%.4e\n", sum{r in 0..RHO}USED_INDICES[r], alpha[0], alpha[1], alpha[2], alpha[3], alpha[4] > "iterations/rsd.csv";
     let ITERATION := ITERATION + 1;
 }
 
-display F;
+printf "-,-,-,-,-,-\n" > "iterations/rsd.csv";
+
+for {i in N} {
+    for {j in N} {
+        if (i, j) not in A then continue;
+        if x[i, j] < 1e-6 then continue;
+        printf "%d,%d,%.2f\n", i, j, x[i, j] > "results/rsd.csv";
+    }
+}
+
+print OBJ_FUNC;
