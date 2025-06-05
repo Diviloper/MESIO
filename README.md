@@ -20,7 +20,7 @@ Assignments:
     - Deliverable: [`/ogd/deliverables/OGD - Cutting Plane.pdf`](./ogd/deliverables/OGD%20-%20Cutting%20Plane.pdf)
 - Frank Wolfe & Restricted Simplicial Decomposition:
     - Code: [`ogd/wolfe_rsd`](./ogd/wolfe_rsd/)
-    - Deliverable: [/ogd/deliverables/OGD - FW & RSD.pdf](./ogd/deliverables/OGD%20-%20FW%20&%20RSD.pdf)
+    - Deliverable: [`/ogd/deliverables/OGD - FW & RSD.pdf`](./ogd/deliverables/OGD%20-%20FW%20&%20RSD.pdf)
     
 ## Stochastic Programming (PE - 24/25 Q2)
 
