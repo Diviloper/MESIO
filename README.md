@@ -29,3 +29,9 @@ Tasks:
 1. Stochastic Farmer's Problem : [`pe/task_1_random_farmer`](./pe/task_1_random_farmer)
 2. News Vendor Problem: [`pe/task_2_news_vendor`](./pe/task_2_news_vendor)
 3. Study or Basketball Problem: [`pe/task_3_study_or_basketball`](./pe/task_3_study_or_basketball)
+
+Assignments:
+
+1. Benders' Decomposition (ATM): 
+    - Code: [`pe/lab_atm/`](./pe/lab_atm/)
+    - Deliverable: [`pe\lab_atm\deliverable\PE - Benders' Decomposition.pdf`](./pe/lab_atm/deliverable/PE%20-%20Benders'%20Decomposition.pdf)
