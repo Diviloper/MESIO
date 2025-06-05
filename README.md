@@ -14,7 +14,13 @@ Assignments:
     - Deliverable: [``ogd/deliverables/OGD - Primal-Dual Path-Following Algorithm.pdf``](./ogd/deliverables/OGD%20-%20Primal-Dual%20Path-Following%20Algorithm.pdf)
 - Benders' Decomposition:
     - Code: [`ogd/benders/`](./ogd/benders/)
-    - Deliverable: [`/ogd/deliverables/OGD - Benders' Decomposition`](./ogd/deliverables/OGD%20-%20Benders'%20Decomposition.pdf)
+    - Deliverable: [`/ogd/deliverables/OGD - Benders' Decomposition.pdf`](./ogd/deliverables/OGD%20-%20Benders'%20Decomposition.pdf)
+- Cutting Plane:
+    - Code: [`ogd/cutting_plane/`](./ogd/cutting_plane/)
+    - Deliverable: [`/ogd/deliverables/OGD - Cutting Plane.pdf`](./ogd/deliverables/OGD%20-%20Cutting%20Plane.pdf)
+- Frank Wolfe & Restricted Simplicial Decomposition:
+    - Code: [`ogd/wolfe_rsd`](./ogd/wolfe_rsd/)
+    - Deliverable: [/ogd/deliverables/OGD - FW & RSD.pdf](./ogd/deliverables/OGD%20-%20FW%20&%20RSD.pdf)
     
 ## Stochastic Programming (PE - 24/25 Q2)
 
