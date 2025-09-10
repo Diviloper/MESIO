@@ -35,3 +35,7 @@ Assignments:
 1. Benders' Decomposition (ATM): 
     - Code: [`pe/lab_atm/`](./pe/lab_atm/)
     - Deliverable: [`pe\lab_atm\deliverable\PE - Benders' Decomposition.pdf`](./pe/lab_atm/deliverable/PE%20-%20Benders'%20Decomposition.pdf)
+
+## Optimization in Data Science (ODS - 25/26 Q1)
+
+## Models and Methods of Operations Research (MMIO - 25/26 Q1)
