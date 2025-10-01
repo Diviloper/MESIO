@@ -1,0 +1,12 @@
+[project]
+name = "clustering"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "jupyter>=1.1.1",
+    "mst-clustering>=1.0",
+    "scikit-learn>=1.7.2",
+    "scikit-learn-extra>=0.3.0",
+]
