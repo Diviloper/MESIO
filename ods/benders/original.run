@@ -7,6 +7,6 @@ option solver cplex;
 
 include matrix_loader.run;
 
-display A;
-
 solve;
+
+display y;
