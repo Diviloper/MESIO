@@ -1,0 +1,12 @@
+reset;
+
+model original.mod;
+data instances_csp/example_2D.ampl;
+
+option solver cplex;
+
+include matrix_loader.run;
+
+display A;
+
+solve;

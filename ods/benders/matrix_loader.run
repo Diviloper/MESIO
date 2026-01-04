@@ -1,0 +1,5 @@
+for {row in C} {
+	for {k in begconst[row] .. (begconst[row+1]-1)} {
+		let A[row, xcoef[k]] := coef[k];
+	}
+}
