@@ -1,11 +1,15 @@
 reset;
 
 model benders.mod;
-data instances_csp/small.ampl;
+data instances_csp/targus.ampl;
+include matrix_loader.run;
 
 option solver cplex;
-#option cplex_options 'presolve=0 chk:feastol=1e-9 sol:chk:prec=20';
-option cplex_options 'presolve=0';
+
+# For targus
+option cplex_options 'dual';
+
+option omit_zero_rows 1;
 
 problem Master: y, z, Total_Cost, Cuts;
 problem Sub: alpha_l, alpha_u, gamma_l, gamma_u, lambda_l, lambda_u, mu_l, mu_u, Subproblem_Cost, Conservation_L, Conservation_U;
@@ -13,27 +17,27 @@ problem Sub: alpha_l, alpha_u, gamma_l, gamma_u, lambda_l, lambda_u, mu_l, mu_u,
 suffix unbdd OUT;
 
 let NCuts := 0;
-    
-for {i in I} let Y[i] := is_p[i];
+
+for {i in I} let Y[i] := 0;
 
 param GAP default Infinity;
 param epsilon default 1.0e-8;
-let z := 1000000;
+let z := 1000;
 
 repeat {
     printf "-------------------------------------------------------\n";
     printf "Iteration %d\n", NCuts + 1;
     printf "-------------------------------------------------------\n";
-    
+
     printf "Solving Subproblem\n";
     solve Sub;
-    display Sub.result, Subproblem_Cost;
+    printf "\n";
 
     let NCuts := NCuts + 1;
     if Sub.result = "unbounded" then {
         printf "Subproblem Unbounded -> Adding Ray Cut\n";
 
-        
+
         let CutType[NCuts] := "ray";
         let Gamma[NCuts] := sum {px in P} (plpl[px] * gamma_l[px].unbdd + pupl[px] * gamma_u[px].unbdd);
         let {i in I} Lambda[NCuts, i] := sum {px in P} (
@@ -45,7 +49,7 @@ repeat {
     }
     else {
         if z <= epsilon then break;
-        
+
         printf "Subproblem Solved -> Adding Point Cut\n";
 
         let CutType[NCuts] := "point";
@@ -57,12 +61,17 @@ repeat {
         	(ub[i] - a[i]) * mu_u[px, i]
         	);
     }
-    
+
     printf "\nSolving Master Problem\n";
     solve Master;
-    expand Master;
-    
+    printf "\n";
+
     display Master.result, y, z, Total_Cost;
-    
-    for {i in I} let Y[i] := y[i];
+
+    for {i in I} let Y[i] := round(y[i]);
+
 }
+
+display y;
+display z;
+display Total_Cost;

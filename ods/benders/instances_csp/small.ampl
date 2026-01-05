@@ -1,5 +1,5 @@
 param ncells := 34;
-param :			 a		 lb		 ub		  c		 is_p		  :=
+param :		a		lb		ub		c		is_p		  :=
 	1		300		0		345		1		1
 	2		8		0		15		1		0
 	3		5		0		10		1		0
@@ -36,14 +36,14 @@ param :			 a		 lb		 ub		  c		 is_p		  :=
 	34		176		176		176		1		0
 ;
 param npcells := 4;
-param:			 p 		 plpl 		 pupl := 
-	1		1		15              20
+param:		p 		plpl 	pupl := 
+	1		1		15      20
 	2		5		2		4
 	3		9		10		6
 	4		24		9		3
 ;
 param nconstraints := 10;
-param :			 coef		 xcoef :=
+param :		coef	xcoef :=
 	1		-1		7
 	2		1		1
 	3		1		2

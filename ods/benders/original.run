@@ -4,9 +4,11 @@ model original.mod;
 data instances_csp/example_2D.ampl;
 
 option solver cplex;
+option cplex_options 'integrality=1e-12';
 
 include matrix_loader.run;
 
 solve;
 
 display y;
+display Total_Cost;

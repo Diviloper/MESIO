@@ -39,7 +39,7 @@ param A{C, I} default 0;	# Matrix A
 
 # Variables
 var y {I} binary;           # Cell i suppressed
-var z; 						# Cost from cuts for a given selection
+var z >= 0; 				# Cost from cuts for a given selection
 
 # Parameters
 param NCuts >= 0 integer;   # Number of cuts
@@ -91,7 +91,7 @@ maximize Subproblem_Cost:
 subject to
 
 Conservation_L {i in I, px in P}:
-	sum {cx in C} A[cx, i] * alpha_l[px, cx] + lambda_l[px, i] - mu_l[px, i] - gamma_l[px] = 0;
+	sum {cx in C} A[cx, i] * alpha_l[px, cx] + lambda_l[px, i] - mu_l[px, i] - (if p[px] = i then 1) * gamma_l[px] = 0;
 	
 Conservation_U {i in I, px in P}:
-	sum {cx in C} A[cx, i] * alpha_u[px, cx] + lambda_u[px, i] - mu_u[px, i] + gamma_u[px] = 0;
+	sum {cx in C} A[cx, i] * alpha_u[px, cx] + lambda_u[px, i] - mu_u[px, i] + (if p[px] = i then 1) * gamma_u[px] = 0;
