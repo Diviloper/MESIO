@@ -43,8 +43,6 @@ var z >= 0; 				# Cost from cuts for a given selection
 
 # Parameters
 param NCuts >= 0 integer;   # Number of cuts
-param CutType {1..NCuts}    # Type of each cut
-   symbolic within {"point", "ray"};
 param Gamma {1..NCuts};		# Gamma
 param Lambda {1..NCuts, I};	# Lambda
 
@@ -53,8 +51,7 @@ minimize Total_Cost:
     sum {i in I} c[i] * y[i] + z;
     
 subj to Cuts {k in 1..NCuts}:
-   (if CutType[k] = "point" then z) >=
-      Gamma[k] + sum {i in I} Lambda[k, i] * y[i];
+   Gamma[k] + sum {i in I} Lambda[k, i] * y[i] <= 0;
 
 #------------------------------------
 #-------------SubProblem-------------
@@ -87,11 +84,18 @@ maximize Subproblem_Cost:
 	);
 	
 # Constraints
-
 subject to
 
 Conservation_L {i in I, px in P}:
-	sum {cx in C} A[cx, i] * alpha_l[px, cx] + lambda_l[px, i] - mu_l[px, i] - (if p[px] = i then 1) * gamma_l[px] = 0;
+	sum {cx in C} A[cx, i] * alpha_l[px, cx] 
+	+ lambda_l[px, i] 
+	- mu_l[px, i] 
+	- (if p[px] = i then 1) * gamma_l[px] 
+	= 0;
 	
 Conservation_U {i in I, px in P}:
-	sum {cx in C} A[cx, i] * alpha_u[px, cx] + lambda_u[px, i] - mu_u[px, i] + (if p[px] = i then 1) * gamma_u[px] = 0;
+	sum {cx in C} A[cx, i] * alpha_u[px, cx] 
+	+ lambda_u[px, i] 
+	- mu_u[px, i] 
+	+ (if p[px] = i then 1) * gamma_u[px] 
+	= 0;

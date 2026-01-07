@@ -1,66 +1,30 @@
 reset;
 
 model benders.mod;
-data instances_csp/targus.ampl;
+data instances_csp/small.ampl;
 include matrix_loader.run;
 
 option solver cplex;
-
+option cplex_options 'presolve=0';
 # For targus
-option cplex_options 'dual';
+#option cplex_options 'presolve=0 dual';
 
 option omit_zero_rows 1;
 
 problem Master: y, z, Total_Cost, Cuts;
-problem Sub: alpha_l, alpha_u, gamma_l, gamma_u, lambda_l, lambda_u, mu_l, mu_u, Subproblem_Cost, Conservation_L, Conservation_U;
+problem Sub: alpha_l, alpha_u, gamma_l, gamma_u, lambda_l, lambda_u, mu_l, mu_u,
+             Subproblem_Cost, Conservation_L, Conservation_U;
 
 suffix unbdd OUT;
 
 let NCuts := 0;
 
-for {i in I} let Y[i] := 0;
-
-param GAP default Infinity;
 param epsilon default 1.0e-8;
-let z := 1000;
 
 repeat {
     printf "-------------------------------------------------------\n";
     printf "Iteration %d\n", NCuts + 1;
     printf "-------------------------------------------------------\n";
-
-    printf "Solving Subproblem\n";
-    solve Sub;
-    printf "\n";
-
-    let NCuts := NCuts + 1;
-    if Sub.result = "unbounded" then {
-        printf "Subproblem Unbounded -> Adding Ray Cut\n";
-
-
-        let CutType[NCuts] := "ray";
-        let Gamma[NCuts] := sum {px in P} (plpl[px] * gamma_l[px].unbdd + pupl[px] * gamma_u[px].unbdd);
-        let {i in I} Lambda[NCuts, i] := sum {px in P} (
-        	(lb[i] - a[i]) * lambda_l[px, i].unbdd -
-        	(ub[i] - a[i]) * mu_l[px, i].unbdd +
-        	(lb[i] - a[i]) * lambda_u[px, i].unbdd -
-        	(ub[i] - a[i]) * mu_u[px, i].unbdd
-        	);
-    }
-    else {
-        if z <= epsilon then break;
-
-        printf "Subproblem Solved -> Adding Point Cut\n";
-
-        let CutType[NCuts] := "point";
-        let Gamma[NCuts] := sum {px in P} (plpl[px] * gamma_l[px] + pupl[px] * gamma_u[px]);
-        let {i in I} Lambda[NCuts, i] := sum {px in P} (
-        	(lb[i] - a[i]) * lambda_l[px, i] -
-        	(ub[i] - a[i]) * mu_l[px, i] +
-        	(lb[i] - a[i]) * lambda_u[px, i] -
-        	(ub[i] - a[i]) * mu_u[px, i]
-        	);
-    }
 
     printf "\nSolving Master Problem\n";
     solve Master;
@@ -70,8 +34,27 @@ repeat {
 
     for {i in I} let Y[i] := round(y[i]);
 
+    printf "Solving Subproblem\n";
+    solve Sub;
+    printf "\n";
+
+    let NCuts := NCuts + 1;
+    if Sub.result = "unbounded" then {
+        printf "Subproblem Unbounded -> Adding Ray Cut\n";
+
+        let Gamma[NCuts] := sum {px in P} (
+          plpl[px] * gamma_l[px].unbdd + 
+          pupl[px] * gamma_u[px].unbdd
+        );
+        let {i in I} Lambda[NCuts, i] := sum {px in P} (
+        	(lb[i] - a[i]) * lambda_l[px, i].unbdd -
+        	(ub[i] - a[i]) * mu_l[px, i].unbdd +
+        	(lb[i] - a[i]) * lambda_u[px, i].unbdd -
+        	(ub[i] - a[i]) * mu_u[px, i].unbdd
+        	);
+    }
+    else break;
 }
 
 display y;
-display z;
 display Total_Cost;
