@@ -11,7 +11,7 @@ option cplex_options 'presolve=0';
 
 option omit_zero_rows 1;
 
-problem Master: y, z, Total_Cost, Cuts;
+problem Master: y, Total_Cost, Cuts;
 problem Sub: alpha_l, alpha_u, gamma_l, gamma_u, lambda_l, lambda_u, mu_l, mu_u,
              Subproblem_Cost, Conservation_L, Conservation_U;
 
@@ -30,7 +30,7 @@ repeat {
     solve Master;
     printf "\n";
 
-    display Master.result, y, z, Total_Cost;
+    display Master.result, y, Total_Cost;
 
     for {i in I} let Y[i] := round(y[i]);
 
