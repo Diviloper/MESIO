@@ -39,7 +39,6 @@ param A{C, I} default 0;	# Matrix A
 
 # Variables
 var y {I} binary;           # Cell i suppressed
-var z >= 0; 				# Cost from cuts for a given selection
 
 # Parameters
 param NCuts >= 0 integer;   # Number of cuts
@@ -48,7 +47,7 @@ param Lambda {1..NCuts, I};	# Lambda
 
 # Objective
 minimize Total_Cost: 
-    sum {i in I} c[i] * y[i] + z;
+    sum {i in I} c[i] * y[i];
     
 subj to Cuts {k in 1..NCuts}:
    Gamma[k] + sum {i in I} Lambda[k, i] * y[i] <= 0;
