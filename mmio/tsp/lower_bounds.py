@@ -67,11 +67,14 @@ def sec_identification(original_arcs: dict[tuple[int, int], float]) -> str | Non
         i, j = next(arc for arc, cost in arcs.items() if cost == 1)
         node_id = next_key()
 
+        print(f"Merging node {i} ({node_map[i]}) and node {j} ({node_map[j]}) into node {node_id}")
+
         node_map[node_id] = node_map[i] | node_map[j]
 
         nodes.remove(i)
         nodes.remove(j)
         nodes.add(node_id)
+
 
         new_arcs = {
             (node, node_id): arcs.get((i, node), 0)
@@ -87,6 +90,7 @@ def sec_identification(original_arcs: dict[tuple[int, int], float]) -> str | Non
     i, j = next(arc for arc, cost in arcs.items() if cost > 1)
 
     sec_nodes = node_map[i] | node_map[j]
+    print(f"Subtour found between nodes {sec_nodes}")
     sec_arcs = {
         arc: cost
         for arc, cost in original_arcs.items()
@@ -152,7 +156,7 @@ def ampl_to_cplex(out_path: str = "./lower_bounds/cplex_model.mps") -> None:
     shutil.move("model.lp.mps", out_path)
 
 
-def find_gomory_cut() -> str | None:
+def find_gomory_cut() -> list[str]:
     ampl_to_cplex()
     print("Loading model in CPLEX")
     prob = cplex.Cplex("./lower_bounds/cplex_model.mps")
@@ -171,20 +175,26 @@ def find_gomory_cut() -> str | None:
     basic = prob.solution.basis.status.basic
     status = prob.solution.basis.get_basis()[0]
 
-    header: list[tuple[int, float]] = zip(*prob.solution.basis.get_header())
+    header: list[tuple[int, float]] = list(zip(*prob.solution.basis.get_header()))
+
+    print("\n".join(f"{var_map[var_names[var]]},{val}" for var, val in header))
+
+    cuts = []
 
     for tableau_row_idx, (basic_variable, base_value) in enumerate(header):
         if basic_variable < 0:
-            # Ignore basic slack variables
+            print("Ignoring basic slack variable")
             continue
         if base_value.is_integer():
+            print("Ignoring integer basic variable")
             continue
 
         print(
-            f"Selected variable {var_names[basic_variable]} (tableau index {tableau_row_idx}) with value {sol_values[basic_variable]}"
+            f"Selected variable {var_map[var_names[basic_variable]]} {var_names[basic_variable]} (tableau index {tableau_row_idx}) with value {sol_values[basic_variable]})"
         )
 
         tableau_row = prob.solution.advanced.binvarow(tableau_row_idx)
+        print(f"Tableau row lenght: {len(tableau_row)}")
 
         rhs = floor(sol_values[basic_variable])
         cut_indices = [basic_variable]
@@ -209,10 +219,11 @@ def find_gomory_cut() -> str | None:
         constraint = f"{constraint_sum} <= {rhs};"
         print(constraint)
         print(f"Unsatisfied for current solution: {lhs} !<= {rhs}")
-        return constraint
-    else:
+        cuts.append(constraint)
+
+    if len(cuts) == 0:
         print("No valid cut was found")
-        return ""
+    return cuts
 
 
 def export_arcs_to_csv(

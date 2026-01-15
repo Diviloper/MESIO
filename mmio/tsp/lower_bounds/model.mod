@@ -5,7 +5,7 @@ set E within N cross N;
 # Arc costs
 param c {E};
 
-# Decision variables: Arc used (binary-like restricted to 0..1)
+# Decision variables: Arc used (relaxed)
 var x {E} >= 0, <= 1;
 
 # Objective: Minimize total cost
