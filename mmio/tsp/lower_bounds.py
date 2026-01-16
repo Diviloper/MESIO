@@ -1,8 +1,11 @@
 import itertools
+import json
 import shutil
 from math import floor
 
 import cplex
+import matplotlib.pyplot as plt
+import networkx as nx
 import pandas as pd
 from amplpy import AMPL
 
@@ -20,8 +23,11 @@ class Chars:
 
 num_cuts = 0
 
+Arc = tuple[int, int]
+ArcsAssignation = dict[Arc, float]
 
-def solve_relaxation() -> tuple[dict[tuple[int, int], float], float]:
+
+def solve_relaxation() -> tuple[ArcsAssignation, float]:
     ampl = AMPL()
     ampl.read("./lower_bounds/model.mod")
     ampl.read("./lower_bounds/cuts.mod")
@@ -36,7 +42,7 @@ def solve_relaxation() -> tuple[dict[tuple[int, int], float], float]:
     }, ampl.get_objective("Total_Cost").value()
 
 
-def solve_ilp() -> tuple[dict[tuple[int, int], float], float]:
+def solve_ilp() -> tuple[ArcsAssignation, float]:
     ampl = AMPL()
     ampl.read("./lower_bounds/model_ilp.mod")
     ampl.read("./lower_bounds/cuts.mod")
@@ -51,14 +57,14 @@ def solve_ilp() -> tuple[dict[tuple[int, int], float], float]:
     }, ampl.get_objective("Total_Cost").value()
 
 
-def is_circuit(arcs: dict[tuple[int, int], float]) -> bool:
+def is_circuit(arcs: ArcsAssignation) -> bool:
     if any(not v.is_integer() for v in arcs.values()):
         return False
 
     return connected_components(arcs) == 1
 
 
-def connected_components(arcs: dict[tuple[int, int], float]) -> int:
+def connected_components(arcs: ArcsAssignation) -> int:
     visited = set()
     non_visited = set(range(1, 24))
     stack = []
@@ -71,16 +77,16 @@ def connected_components(arcs: dict[tuple[int, int], float]) -> int:
             if curr not in visited:
                 visited.add(curr)
                 non_visited.remove(curr)
-                connected = [i for (i, j), cost in arcs.items() if cost > 0 and j == curr] + [
-                    j for (i, j), cost in arcs.items() if cost > 0 and i == curr
-                ]
+                connected = [
+                    i for (i, j), cost in arcs.items() if cost > 0 and j == curr
+                ] + [j for (i, j), cost in arcs.items() if cost > 0 and i == curr]
                 stack.extend(connected)
         cc += 1
 
     return cc
 
 
-def sec_identification(original_arcs: dict[tuple[int, int], float]) -> str | None:
+def sec_identification(original_arcs: ArcsAssignation) -> str | None:
     arcs = original_arcs.copy()
     nodes: set[str | int] = set(range(1, 24))
     node_map = {i: {i} for i in nodes}
@@ -140,7 +146,7 @@ def sec_identification(original_arcs: dict[tuple[int, int], float]) -> str | Non
     return constraint
 
 
-def find_2match(arcs: dict[tuple[int, int], float]) -> str | None:
+def find_2match(arcs: ArcsAssignation) -> str | None:
     nodes = {i for i, j in arcs.keys()} | {j for i, j in arcs.keys()}
     for H in itertools.combinations(nodes, 3):
         H_set = set(H)
@@ -258,7 +264,7 @@ def find_gomory_cut() -> list[str]:
 
 
 def export_arcs_to_csv(
-    arcs: dict[tuple[int, int], float], out_path: str, include_empty_arcs: bool = True
+    arcs: ArcsAssignation, out_path: str, include_empty_arcs: bool = True
 ) -> None:
     data = [
         f"{i},{j},{cost}"
@@ -270,7 +276,7 @@ def export_arcs_to_csv(
         f.write("\n".join(data))
 
 
-def arcs_as_dataframe(arcs: dict[tuple[int, int], float]) -> pd.DataFrame:
+def arcs_as_dataframe(arcs: ArcsAssignation) -> pd.DataFrame:
     data = [(i, j, cost) for (i, j), cost in arcs.items()]
     return pd.DataFrame(data=data, columns=["i", "j", "value"])
 
@@ -288,6 +294,66 @@ def add_cut(cut: str, cut_type: str) -> None:
     with open("./lower_bounds/cuts.mod", "a+", encoding="utf8") as f:
         f.write(f"# ---------- {cut_type} cut ----------\n")
         f.write(f"subject to Cut_{cut_type}_{num_cuts}: {cut}\n\n")
+
+
+def paint_graph(
+    arcs: ArcsAssignation,
+    personalized_arcs: dict[Arc, dict] | None = None,
+    personalized_nodes: dict[int, dict] | None = None,
+    axes: plt.Axes | None = None,
+):
+    personalized_arcs = personalized_arcs or {}
+    personalized_nodes = personalized_nodes or {}
+    axes = axes or plt.gca()
+
+    with open("lower_bounds/locations.json", "r", encoding="utf8") as f:
+        locations = json.load(f)
+        locations = {i + 1: loc for i, loc in enumerate(locations)}
+
+    graph = nx.Graph()
+
+    for arc, arc_value in arcs.items():
+        graph.add_edge(*arc)
+
+    nodes = [n for n in range(1, 24) if n not in personalized_nodes]
+
+    full_arcs = [
+        arc
+        for arc, value in arcs.items()
+        if value == 1 and arc not in personalized_arcs
+    ]
+    fractional_arcs = [
+        arc
+        for arc, value in arcs.items()
+        if 0 < value < 1 and arc not in personalized_arcs
+    ]
+
+    nx.draw_networkx_nodes(
+        graph, locations, nodelist=nodes, node_size=400, node_color="lightblue", ax=axes
+    )
+    for node, config in personalized_nodes.items():
+        nx.draw_networkx_nodes(
+            graph, locations, nodelist=[node], node_size=400, **config, ax=axes
+        )
+    nx.draw_networkx_labels(graph, locations, font_size=8, ax=axes)
+    nx.draw_networkx_edges(
+        graph, locations, edgelist=full_arcs, width=2, edge_color="black", ax=axes
+    )
+    nx.draw_networkx_edges(
+        graph,
+        locations,
+        edgelist=fractional_arcs,
+        width=2,
+        edge_color="black",
+        style="dashed",
+        ax=axes,
+    )
+    for arc, config in personalized_arcs.items():
+        nx.draw_networkx_edges(
+            graph, locations, edgelist=[arc], width=2, **config, ax=axes
+        )
+
+    axes.axis("off")
 
 
 if __name__ == "__main__":

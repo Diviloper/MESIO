@@ -8,6 +8,8 @@ dependencies = [
     "amplpy>=0.16.0",
     "cplex>=22.1.2.0",
     "ipykernel>=7.1.0",
+    "matplotlib>=3.10.8",
+    "networkx>=3.6.1",
     "pandas>=2.3.3",
 ]
 
