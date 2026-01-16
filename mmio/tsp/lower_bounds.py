@@ -322,30 +322,58 @@ def paint_graph(
         for arc, value in arcs.items()
         if value == 1 and arc not in personalized_arcs
     ]
-    fractional_arcs = [
+    half_arcs = [
         arc
         for arc, value in arcs.items()
-        if 0 < value < 1 and arc not in personalized_arcs
+        if value == 0.5 and arc not in personalized_arcs
+    ]
+    quarter_arcs = [
+        arc
+        for arc, value in arcs.items()
+        if value == 0.25 and arc not in personalized_arcs
+    ]
+    three_quarters_arcs = [
+        arc
+        for arc, value in arcs.items()
+        if value == 0.75 and arc not in personalized_arcs
     ]
 
     nx.draw_networkx_nodes(
-        graph, locations, nodelist=nodes, node_size=400, node_color="lightblue", ax=axes
+        graph, locations, nodelist=nodes, node_size=500, node_color="lightblue", ax=axes
     )
     for node, config in personalized_nodes.items():
         nx.draw_networkx_nodes(
-            graph, locations, nodelist=[node], node_size=400, **config, ax=axes
+            graph, locations, nodelist=[node], node_size=500, **config, ax=axes
         )
-    nx.draw_networkx_labels(graph, locations, font_size=8, ax=axes)
+    nx.draw_networkx_labels(graph, locations, font_size=10, ax=axes)
     nx.draw_networkx_edges(
         graph, locations, edgelist=full_arcs, width=2, edge_color="black", ax=axes
     )
     nx.draw_networkx_edges(
         graph,
         locations,
-        edgelist=fractional_arcs,
+        edgelist=half_arcs,
         width=2,
         edge_color="black",
         style="dashed",
+        ax=axes,
+    )
+    nx.draw_networkx_edges(
+        graph,
+        locations,
+        edgelist=quarter_arcs,
+        width=2,
+        edge_color="black",
+        style="dotted",
+        ax=axes,
+    )
+    nx.draw_networkx_edges(
+        graph,
+        locations,
+        edgelist=three_quarters_arcs,
+        width=2,
+        edge_color="black",
+        style="dashdot",
         ax=axes,
     )
     for arc, config in personalized_arcs.items():
