@@ -8,11 +8,11 @@ dependencies = [
     "amplpy>=0.16.0",
     "cplex>=22.1.2.0",
     "ipykernel>=7.1.0",
-    "nest-asyncio>=1.6.0",
     "pandas>=2.3.3",
 ]
 
 [dependency-groups]
 dev = [
     "ruff>=0.14.10",
+    "pandas-stubs~=2.3.3",
 ]

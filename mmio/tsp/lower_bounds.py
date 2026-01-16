@@ -1,9 +1,10 @@
+import itertools
 import shutil
 from math import floor
 
 import cplex
+import pandas as pd
 from amplpy import AMPL
-import itertools
 
 
 class Chars:
@@ -20,7 +21,7 @@ class Chars:
 num_cuts = 0
 
 
-def solve_relaxation() -> dict[tuple[int, int], float]:
+def solve_relaxation() -> tuple[dict[tuple[int, int], float], float]:
     ampl = AMPL()
     ampl.read("./lower_bounds/model.mod")
     ampl.read("./lower_bounds/cuts.mod")
@@ -32,10 +33,10 @@ def solve_relaxation() -> dict[tuple[int, int], float]:
 
     return {
         (i, j): x[i, j].value() for i in range(1, n + 1) for j in range(i + 1, n + 1)
-    }
+    }, ampl.get_objective("Total_Cost").value()
 
 
-def solve_ilp() -> dict[tuple[int, int], float]:
+def solve_ilp() -> tuple[dict[tuple[int, int], float], float]:
     ampl = AMPL()
     ampl.read("./lower_bounds/model_ilp.mod")
     ampl.read("./lower_bounds/cuts.mod")
@@ -47,12 +48,41 @@ def solve_ilp() -> dict[tuple[int, int], float]:
 
     return {
         (i, j): x[i, j].value() for i in range(1, n + 1) for j in range(i + 1, n + 1)
-    }
+    }, ampl.get_objective("Total_Cost").value()
+
+
+def is_circuit(arcs: dict[tuple[int, int], float]) -> bool:
+    if any(not v.is_integer() for v in arcs.values()):
+        return False
+
+    return connected_components(arcs) == 1
+
+
+def connected_components(arcs: dict[tuple[int, int], float]) -> int:
+    visited = set()
+    non_visited = set(range(1, 24))
+    stack = []
+    cc = 0
+
+    while len(non_visited) > 0:
+        stack.append(next(iter(non_visited)))
+        while stack:
+            curr = stack.pop()
+            if curr not in visited:
+                visited.add(curr)
+                non_visited.remove(curr)
+                connected = [i for (i, j), cost in arcs.items() if cost > 0 and j == curr] + [
+                    j for (i, j), cost in arcs.items() if cost > 0 and i == curr
+                ]
+                stack.extend(connected)
+        cc += 1
+
+    return cc
 
 
 def sec_identification(original_arcs: dict[tuple[int, int], float]) -> str | None:
     arcs = original_arcs.copy()
-    nodes: set[str | int] = set(range(23))
+    nodes: set[str | int] = set(range(1, 24))
     node_map = {i: {i} for i in nodes}
     next_key = Chars()
     while True:
@@ -67,7 +97,9 @@ def sec_identification(original_arcs: dict[tuple[int, int], float]) -> str | Non
         i, j = next(arc for arc, cost in arcs.items() if cost == 1)
         node_id = next_key()
 
-        print(f"Merging node {i} ({node_map[i]}) and node {j} ({node_map[j]}) into node {node_id}")
+        print(
+            f"Merging node {i} ({node_map[i]}) and node {j} ({node_map[j]}) into node {node_id}"
+        )
 
         node_map[node_id] = node_map[i] | node_map[j]
 
@@ -75,12 +107,11 @@ def sec_identification(original_arcs: dict[tuple[int, int], float]) -> str | Non
         nodes.remove(j)
         nodes.add(node_id)
 
-
         new_arcs = {
             (node, node_id): arcs.get((i, node), 0)
-                             + arcs.get((node, i), 0)
-                             + arcs.get((j, node), 0)
-                             + arcs.get((node, j), 0)
+            + arcs.get((node, i), 0)
+            + arcs.get((j, node), 0)
+            + arcs.get((node, j), 0)
             for node in nodes
         }
         arcs = new_arcs | {
@@ -227,7 +258,7 @@ def find_gomory_cut() -> list[str]:
 
 
 def export_arcs_to_csv(
-        arcs: dict[tuple[int, int], float], out_path: str, include_empty_arcs: bool = True
+    arcs: dict[tuple[int, int], float], out_path: str, include_empty_arcs: bool = True
 ) -> None:
     data = [
         f"{i},{j},{cost}"
@@ -237,6 +268,11 @@ def export_arcs_to_csv(
     with open(out_path, "w+", encoding="utf8") as f:
         f.write("i,j,cost\n")
         f.write("\n".join(data))
+
+
+def arcs_as_dataframe(arcs: dict[tuple[int, int], float]) -> pd.DataFrame:
+    data = [(i, j, cost) for (i, j), cost in arcs.items()]
+    return pd.DataFrame(data=data, columns=["i", "j", "value"])
 
 
 def clear_cuts() -> None:

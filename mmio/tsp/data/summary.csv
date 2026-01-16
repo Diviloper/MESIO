@@ -1,0 +1,8 @@
+Name,Cost,# Fractional arcs,# Connected Components,Circuit
+Base Relaxation,6043.0,8,2,False
+SEC 1,6146.5,8,1,False
+SEC 2,6147.0,6,1,False
+2-Matching Cut 1,6148.5,6,1,False
+2-Matching Cut 2,6149.5,6,1,False
+Gomory Cuts,6363.0,6,2,False
+Branch & Bound,6387.0,0,3,False
